@@ -67,3 +67,9 @@ smallest_in_rotj
     # Then any(...) checks if at least one film title matches.
     # map_lgl(...) turns this into a single TRUE/FALSE for each row, which filter() then uses to keep or discard rows.
 
+
+#####################################################################################################################################
+library(readr)
+
+df <- read_csv("FLX_CH-Lae_FLUXNET2015_FULLSET_HH_2004-2006.csv")
+df <- readr::read_csv("data/FLX_CH-Lae_FLUXNET2015_FULLSET_HH_2004-2006.csv")
