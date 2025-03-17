@@ -1,0 +1,234 @@
+Experiment;Depth;Time _years;mean_ambient_CO2;mean_increased_CO2;n
+ArizonaFACE - wheat - high N;0-15 cm;0;1344;1228;4
+ArizonaFACE - wheat - high N;0-15 cm;0,5;1363;1305;4
+ArizonaFACE - wheat - high N;0-15 cm;1;1254;1264;4
+ArizonaFACE - wheat - high N;0-15 cm;1,5;1258;1400;4
+Biosphere 2;0-25 cm;0;5950;6362;1
+Biosphere 3;0-25 cm;1;5254;4735;1
+Biosphere 4;0-25 cm;2;6084;4785;1
+Biosphere 5;0-25 cm;3;5470;4064;1
+Biosphere 6;0-25 cm;4;5335;4220;1
+China FACE - low N;0-15 cm;3,66;1937;2192;3
+China FACE - low N;0-15 cm;4;1937;2123;3
+China FACE - high N;0-15 cm;3,66;1926;2135;3
+China FACE - high N;0-15 cm;4;1937;2105;3
+China OTC - low N;0-20 cm;0,33;1103;1168;3
+China OTC - low N;0-20 cm;0,67;1036;1097;3
+China OTC - low N;0-20 cm;1;1936;2385;3
+China OTC - low N;0-20 cm;1,33;2319;2218;3
+China OTC - low N;0-20 cm;1,66;2060;2051;3
+China OTC - low N;0-20 cm;2;2431;2301;3
+China OTC - low N;0-20 cm;2,33;2263;2361;3
+China OTC - low N;0-20 cm;2,66;2116;2158;3
+China OTC - low N;0-20 cm;3;3625;3315;3
+China OTC - low N;0-20 cm;3,33;3253;3279;3
+China OTC - low N;0-20 cm;3,66;3287;3410;3
+China OTC - high N;0-20 cm;0,33;1201;1198;3
+China OTC - high N;0-20 cm;0,67;922;1409;3
+China OTC - high N;0-20 cm;1;1930;2373;3
+China OTC - high N;0-20 cm;1,33;1951;2514;3
+China OTC - high N;0-20 cm;1,66;1587;3054;3
+China OTC - high N;0-20 cm;2;2015;3030;3
+China OTC - high N;0-20 cm;2,33;2273;2725;3
+China OTC - high N;0-20 cm;2,66;2187;2702;3
+China OTC - high N;0-20 cm;3;3602;3947;3
+China OTC - high N;0-20 cm;3,33;3581;4170;3
+China OTC - high N;0-20 cm;3,66;3645;4158;3
+FACTS I;0-15 cm;0;1977;2142;3
+FACTS I;0-15 cm;3,17;1902;2208;3
+FACTS I;0-15 cm;6;2407;2734;3
+FACTS I;0-15 cm;9;2164;2096;3
+FACTS II - Aspen;0-10 cm;4;3575;3562;3
+FACTS II - Aspen;0-10 cm;6;3625;4435;3
+FACTS II - Aspen;0-10 cm;7;3235;3243;3
+FACTS II - Aspen;0-10 cm;8;3741;3506;3
+FACTS II - Aspen;0-10 cm;9;4243;3841;3
+FACTS II - Aspen;0-10 cm;10;4374;3760;3
+FACTS II - Aspen;0-10 cm;11;5119;3267;3
+FACTS II - Aspen (+O3);0-10 cm;4;3193;3199;3
+FACTS II - Aspen (+O3);0-10 cm;6;3081;3433;3
+FACTS II - Aspen (+O3);0-10 cm;7;3418;2804;3
+FACTS II - Aspen (+O3);0-10 cm;8;3886;2890;3
+FACTS II - Aspen (+O3);0-10 cm;9;4073;3444;3
+FACTS II - Aspen (+O3);0-10 cm;10;4382;3268;3
+FACTS II - Aspen (+O3);0-10 cm;11;4783;3141;3
+FACTS II - Aspen/Birch;0-10 cm;4;3256;3817;3
+FACTS II - Aspen/Birch;0-10 cm;6;3347;3274;3
+FACTS II - Aspen/Birch;0-10 cm;7;3408;3457;3
+FACTS II - Aspen/Birch;0-10 cm;8;3653;3436;3
+FACTS II - Aspen/Birch;0-10 cm;9;4433;4196;3
+FACTS II - Aspen/Birch;0-10 cm;10;4125;3832;3
+FACTS II - Aspen/Birch;0-10 cm;11;3484;3946;3
+FACTS II - Aspen/Birch (+O3);0-10 cm;4;3305;3121;3
+FACTS II - Aspen/Birch (+O3);0-10 cm;6;4105;3798;3
+FACTS II - Aspen/Birch (+O3);0-10 cm;7;2943;3255;3
+FACTS II - Aspen/Birch (+O3);0-10 cm;8;3578;3351;3
+FACTS II - Aspen/Birch (+O3);0-10 cm;9;4083;4064;3
+FACTS II - Aspen/Birch (+O3);0-10 cm;10;3909;4290;3
+FACTS II - Aspen/Birch (+O3);0-10 cm;11;4113;3849;3
+FACTS II - Aspen/Mapel;0-10 cm;4;2908;3541;3
+FACTS II - Aspen/Mapel;0-10 cm;6;3327;3186;3
+FACTS II - Aspen/Mapel;0-10 cm;7;3135;3270;3
+FACTS II - Aspen/Mapel;0-10 cm;8;4206;3960;3
+FACTS II - Aspen/Mapel;0-10 cm;9;4023;3850;3
+FACTS II - Aspen/Mapel;0-10 cm;10;4014;4450;3
+FACTS II - Aspen/Mapel;0-10 cm;11;3948;4675;3
+FACTS II - Aspen/Mapel (+O3);0-10 cm;4;3449;3334;3
+FACTS II - Aspen/Mapel (+O3);0-10 cm;6;3512;2961;3
+FACTS II - Aspen/Mapel (+O3);0-10 cm;7;3321;3240;3
+FACTS II - Aspen/Mapel (+O3);0-10 cm;8;3564;3376;3
+FACTS II - Aspen/Mapel (+O3);0-10 cm;9;4115;3739;3
+FACTS II - Aspen/Mapel (+O3);0-10 cm;10;3982;3737;3
+FACTS II - Aspen/Mapel (+O3);0-10 cm;11;4093;3723;3
+GiFACE;0-7.5 cm;0;3420;3528;3
+GiFACE;0-7.5 cm;9,08;3150;3096;3
+Hohenheim;0-10 cm;2;1725;1767;5
+Hohenheim;0-10 cm;2,5;1707;1641;5
+Hohenheim;0-10 cm;3;1805;1744;5
+Hohenheim;0-10 cm;3,5;1567;1588;5
+Hohenheim;0-10 cm;4;1680;1717;5
+Hohenheim;0-10 cm;4,5;1721;1763;5
+Jasper Ridge - sandstone;0-15 cm;0;2646;2646;10
+Jasper Ridge - sandstone;0-15 cm;1,41;2646;2354;10
+Jasper Ridge - sandstone;0-15 cm;2,41;2252;2339;10
+Jasper Ridge - sandstone;0-15 cm;3,41;2315;2315;10
+Jasper Ridge - sandstone;0-15 cm;4,41;2497;2486;10
+Jasper Ridge - sandstone;0-15 cm;5,41;2612;2750;10
+JRGCE - Control;0-15 cm;2;2384;2344;6
+JRGCE - Control;0-15 cm;8;2428;2173;6
+JRGCE - Burn;0-15 cm;2;2296;2497;4
+JRGCE - Burn;0-15 cm;8;2544;2269;4
+JRGCE - N;0-15 cm;2;2248;2381;6
+JRGCE - N;0-15 cm;8;2552;2329;6
+JRGCE - N x Burn;0-15 cm;2;2359;2425;4
+JRGCE - N x Burn;0-15 cm;8;2529;2226;4
+JRGCE - Water;0-15 cm;2;2292;2268;6
+JRGCE - Water;0-15 cm;8;2311;2085;6
+JRGCE - Water x Burn;0-15 cm;2;2394;2563;4
+JRGCE - Water x Burn;0-15 cm;8;2396;2301;4
+JRGCE - Water x N;0-15 cm;2;2193;2264;6
+JRGCE - Water x N;0-15 cm;8;2626;2442;6
+JRGCE - Water x N x Burn;0-15 cm;2;2251;2569;4
+JRGCE - Water x N x Burn;0-15 cm;8;2232;2385;4
+JRGCE - Heat;0-15 cm;2;2298;2295;6
+JRGCE - Heat;0-15 cm;8;2385;2438;6
+JRGCE - Heat x N;0-15 cm;2;2288;2454;6
+JRGCE - Heat x N;0-15 cm;8;2283;2449;6
+JRGCE - Heat x Water;0-15 cm;2;2327;2310;6
+JRGCE - Heat x Water;0-15 cm;8;2074;2414;6
+JRGCE - Heat x Water x N;0-15 cm;2;2393;2453;6
+JRGCE - Heat x Water x N;0-15 cm;8;2110;2407;6
+Merritt Island;0-10 cm;0,62;1209;1335;8
+Merritt Island;0-10 cm;2,09;1131;1220;8
+Merritt Island;0-10 cm;2,17;1264;1292;8
+Merritt Island;0-10 cm;2,31;1356;1281;8
+Merritt Island;0-10 cm;2,55;1734;1567;8
+Merritt Island;0-10 cm;3,36;1782;1712;8
+Merritt Island;0-10 cm;4,87;2191;1941;8
+Merritt Island;0-10 cm;6;2099;1741;8
+Merritt Island;0-10 cm;6;1999;1628;8
+Merritt Island;0-10 cm;11;1512;1411;8
+NewZealandFACE;0-5 cm;0;2685;2465;3
+NewZealandFACE;0-5 cm;1;2650;2490;3
+NewZealandFACE;0-5 cm;2;2655;2525;3
+NewZealandFACE;0-5 cm;3;2675;2565;3
+NewZealandFACE;0-5 cm;4;2515;2445;3
+NewZealandFACE;0-5 cm;5;2585;2490;3
+NewZealandFACE;0-5 cm;6;2519;2510;3
+NewZealandFACE;0-5 cm;7;2599;2534;3
+NewZealandFACE;0-5 cm;8;2659;2659;3
+NewZealandFACE;0-5 cm;9;2657;2722;3
+NewZealandFACE;0-5 cm;10;2722;2822;3
+New Zealand Greenhouse;0-5 cm;0;2112,2;2122,4;1
+New Zealand Greenhouse;0-5 cm;0,25;2122,4;2142,9;1
+New Zealand Greenhouse;0-5 cm;0,5;1969,4;1979,6;1
+New Zealand Greenhouse;0-5 cm;0,75;1969,4;2000;1
+New Zealand OTC - P. radiata;0-10 cm;0;100;100;2
+New Zealand OTC - N. fusca;0-10 cm;0;100;100;3
+New Zealand OTC - N. fusca;0-10 cm;6;2403;3402;3
+ORNL FACE;0-15 cm;0;2672;2791;2
+ORNL FACE;0-15 cm;2,42;2785;2866;2
+ORNL FACE;0-15 cm;4,33;2730;2991;2
+ORNL FACE;0-15 cm;11;3370;3850;2
+Placerville - low N;0-30 cm;0;8400;8000;3
+Placerville - low N;0-30 cm;1,75;7600;7600;3
+Placerville - low N;0-30 cm;5,5;7400;7600;3
+Placerville - medium N;0-30 cm;0;7800;7900;3
+Placerville - medium N;0-30 cm;1,75;7700;7800;3
+Placerville - medium N;0-30 cm;5,5;7400;8300;3
+Placerville - high N;0-30 cm;0;8100;7500;3
+Placerville - high N;0-30 cm;1,75;7500;8500;3
+Placerville - high N;0-30 cm;5,5;7400;8100;3
+POPFACE - alba;0-10 cm;0;1320;1128;3
+POPFACE - alba;0-10 cm;1;1365;1195;3
+POPFACE - alba;0-10 cm;2;1524;1295;3
+POPFACE - alba;0-10 cm;4;1629;1377;3
+POPFACE - alba;0-10 cm;5;1647;1480;3
+POPFACE - euramericana;0-10 cm;0;1252;1165;3
+POPFACE - euramericana;0-10 cm;1;1429;1213;3
+POPFACE - euramericana;0-10 cm;2;1405;1084;3
+POPFACE - euramericana;0-10 cm;4;1635;1431;3
+POPFACE - euramericana;0-10 cm;5;1686;1370;3
+POPFACE - nigra;0-10 cm;0;1379;1149;3
+POPFACE - nigra;0-10 cm;1;1458;1169;3
+POPFACE - nigra;0-10 cm;2;1534;1112;3
+POPFACE - nigra;0-10 cm;4;1518;1246;3
+POPFACE - nigra;0-10 cm;5;1509;1344;3
+Shortgrass prairie;0-5 cm;0;617;645;3
+Shortgrass prairie;0-5 cm;1;527;542;3
+Shortgrass prairie;0-5 cm;2;488;522;3
+Shortgrass prairie;0-5 cm;3;618;616;3
+Shortgrass prairie;0-5 cm;4;603;593;3
+SoyFACE;0-12.5 cm;0;4803;4142;3
+SoyFACE;0-12.5 cm;5;4671;4100;3
+SoyFACE;0-12.5 cm;6;4437;3836;3
+SwissFACE- grass - low N;0-10 cm;2;2878;2862;3
+SwissFACE- grass - low N;0-10 cm;3;2796;3584;3
+SwissFACE- grass - low N;0-10 cm;4;2855;2790;3
+SwissFACE- grass - low N;0-10 cm;5;3305;3368;3
+SwissFACE- grass - low N;0-10 cm;6;2970;2946;3
+SwissFACE- grass - low N;0-10 cm;7;2606;2759;3
+SwissFACE- grass - low N;0-10 cm;8;3733;3834;3
+SwissFACE- grass - low N;0-10 cm;9;3350;3498;3
+SwissFACE- grass - low N;0-10 cm;10;3293;3198;3
+SwissFACE- grass - high N;0-10 cm;2;3528;3223;3
+SwissFACE- grass - high N;0-10 cm;3;3052;3892;3
+SwissFACE- grass - high N;0-10 cm;4;3075;3091;3
+SwissFACE- grass - high N;0-10 cm;5;3494;3606;3
+SwissFACE- grass - high N;0-10 cm;6;2986;3045;3
+SwissFACE- grass - high N;0-10 cm;7;2920;2588;3
+SwissFACE- grass - high N;0-10 cm;8;3434;3114;3
+SwissFACE- grass - high N;0-10 cm;9;3302;3439;3
+SwissFACE- grass - high N;0-10 cm;10;3258;3332;3
+SwissFACE- clover - low N;0-10 cm;2;2822;2872;3
+SwissFACE- clover - low N;0-10 cm;3;3048;3500;3
+SwissFACE- clover - low N;0-10 cm;4;2862;2931;3
+SwissFACE- clover - low N;0-10 cm;5;3034;3291;3
+SwissFACE- clover - low N;0-10 cm;6;2758;2911;3
+SwissFACE- clover - low N;0-10 cm;7;2544;2987;3
+SwissFACE- clover - low N;0-10 cm;8;3443;3145;3
+SwissFACE- clover - low N;0-10 cm;9;3053;3591;3
+SwissFACE- clover - low N;0-10 cm;10;2999;3076;3
+SwissFACE- clover - high N;0-10 cm;2;2916;3496;3
+SwissFACE- clover - high N;0-10 cm;3;3256;3688;3
+SwissFACE- clover - high N;0-10 cm;4;2725;2996;3
+SwissFACE- clover - high N;0-10 cm;5;3233;3406;3
+SwissFACE- clover - high N;0-10 cm;6;2759;3153;3
+SwissFACE- clover - high N;0-10 cm;7;2630;2434;3
+SwissFACE- clover - high N;0-10 cm;8;3528;3572;3
+SwissFACE- clover - high N;0-10 cm;9;3209;3456;3
+SwissFACE- clover - high N;0-10 cm;10;2993;3236;3
+Swiss Greenhouse;0-20 cm;0;1280;1280;2
+Swiss Greenhouse;0-20 cm;0,25;1205;980;2
+Tallgrass Prairie;0-5 cm;2,5;2985;2860;3
+Tallgrass Prairie;0-5 cm;8;2181;2372;3
+UMBS - aspen;0-15 cm;0;297;297;4
+UMBS - aspen;0-15 cm;0,5;242;290;4
+WSL - loam, low N;0-10 cm;0;1290;1290;4
+WSL - loam, low N;0-10 cm;3,75;1317;1471;4
+WSL - loam, high N;0-10 cm;0;1290;1290;4
+WSL - loam, high N;0-10 cm;3,75;1482;1547;4
+WSL - sand, low N;0-10 cm;0;1310;1310;4
+WSL - sand, low N;0-10 cm;3,75;1167;1214;4
+WSL - sand, high N;0-10 cm;0;1310;1310;4
+WSL - sand, high N;0-10 cm;3,75;1120;1183;4

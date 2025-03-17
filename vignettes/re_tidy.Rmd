@@ -1,6 +1,19 @@
 ---
-title: "re_tidy"
+title: "Report Exercise 4.6"
+author: "Francesco Lucano"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
-ujjytddddddddhjjhjhjkukukukukukukukukuku
+```{r setup, include=FALSE}
+library(dplyr)    
+library(readr)      
+library(lubridate)  
+library(knitr)
+library(here)
+
+soil_data <- readr::read_delim(
+  here("data", "soil_organic_matter.csv"),
+  delim = ";"
+)
+```
