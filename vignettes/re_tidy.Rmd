@@ -5,7 +5,13 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+# Introduction
+
+Here I briefly describe the purpose of this report.
+
+### Setup
 ```{r setup, include=FALSE}
+# Load necessary packages
 library(dplyr)    
 library(readr)      
 library(lubridate)  
@@ -19,47 +25,34 @@ soil_data <- readr::read_delim(
 )
 ```
 
-
-```{r setup, include=FALSE}
-# we calculate the log-response ratio for each observation
+### Calculate log-response ratio
+```{r}
+# We calculate the log-response ratio for each observation
 soil_data <- soil_data %>%
-  mutate(
-    log_rr = log(mean_increased_CO2 / mean_ambient_CO2)
-  )
+  mutate(log_rr = log(mean_increased_CO2 / mean_ambient_CO2))
 ```
 
-
-```{r setup, include=FALSE}
+### Phase classification
+```{r}
+# We classify observations into phases based on years
 soil_data <- soil_data %>%
-  mutate(
-    # we use case_when to assign a phase based on years.
-    phase = case_when(
-      Time_years < 3  ~ "early",   
-      Time_years <= 6 ~ "mid",     
-      TRUE            ~ "late"    
-    )
-  )
-
-# To check how many observations are categorized into each phase
-table(soil_data$phase)
+  mutate(phase = case_when(
+    Time_years < 3  ~ "early",
+    Time_years <= 6 ~ "mid",
+    TRUE            ~ "late"
+  ))
 ```
 
-
-```{r setup, include=FALSE}
+### Aggregation of log-response ration by phase
+```{r}
+# we aggregate log-response ratios by phase by taking their mean
 phase_summary <- soil_data %>%
-  group_by(phase) %>%                 # Group the data by phase (early, mid, late)
-  summarise(
-    mean_log_rr = mean(log_rr, na.rm = TRUE),  # Calculate the mean log-response ratio, ignoring NA values
-    sd_log_rr   = sd(log_rr, na.rm = TRUE),    # Calculate the standard deviation of log_rr
-    n_obs       = n(),                         # Count the number of observations in each group
-    .groups = "drop"                          # Ungroup after summarising
-  ) %>%
-  mutate(
-    fold_change = exp(mean_log_rr)            # Convert the mean log_rr back to a fold-change (exp(log_rr))
-  )
+  group_by(phase) %>%
+  summarise(mean_log_rr = mean(log_rr, na.rm = TRUE),
+            .groups = "drop")
 
-# Display the results as a nicely formatted table
-kable(phase_summary, caption = "Summary of Log-Response Ratio by Phase")
+# Display the result as a formatted table
+kable(phase_summary, caption = "Mean Log-Response Ratio by Phase")
 ```
 
-
+### Discussion
