@@ -17,3 +17,27 @@ soil_data <- readr::read_delim(
   delim = ";"
 )
 ```
+
+
+```{r setup, include=FALSE}
+# Calculate the log-response ratio for each observation
+soil_data <- soil_data %>%
+  mutate(
+    log_rr = log(mean_increased_CO2 / mean_ambient_CO2)
+  )
+```
+
+```{r setup, include=FALSE}
+soil_data <- soil_data %>%
+  mutate(
+    # Use case_when to assign a phase based on Time_years.
+    phase = case_when(
+      Time_years < 3  ~ "early",   # If time is less than 3 years, label as "early"
+      Time_years <= 6 ~ "mid",     # If time is between 3 and 6 years (inclusive), label as "mid"
+      TRUE            ~ "late"     # Otherwise, label as "late"
+    )
+  )
+
+# Check how many observations fall into each phase
+table(soil_data$phase)
+```

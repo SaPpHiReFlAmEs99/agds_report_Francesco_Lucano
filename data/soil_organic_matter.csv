@@ -1,4 +1,4 @@
-Experiment;Depth;Time _years;mean_ambient_CO2;mean_increased_CO2;n
+Experiment;Depth;Time_years;mean_ambient_CO2;mean_increased_CO2;n
 ArizonaFACE - wheat - high N;0-15 cm;0;1344;1228;4
 ArizonaFACE - wheat - high N;0-15 cm;0,5;1363;1305;4
 ArizonaFACE - wheat - high N;0-15 cm;1;1254;1264;4
