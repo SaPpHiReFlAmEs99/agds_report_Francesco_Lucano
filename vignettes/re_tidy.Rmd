@@ -6,8 +6,17 @@ output: html_document
 ---
 
 # Introduction
+In this exercise we analyze soil organic carbon (SOC) data from experiments where ecosystems were exposed to ambient and elevated CO₂ conditions. Our goal is to calculate a log-response ratio (LRR) defined as
+$$
+\text{LRR} = \ln\left(\frac{\text{SOC}_{\text{elevated}}}{\text{SOC}_{\text{ambient}}}\right)
+$$
+This ratio quantifies the effect of elevated CO₂ on SOC. We then group the data by the number of years since the experiment:
+- Early (<3 years)
+- Mid (3–6 years)
+- Late (>6 years)
 
-Here I briefly describe the purpose of this report.
+Our hypothesis is that elevated CO₂ initially increases SOC by boosting plant growth and carbon input into the soil, but over time, enhanced microbial decomposition limits further SOC accumulation.
+
 
 ### Setup
 ```{r setup, include=FALSE}
@@ -25,6 +34,7 @@ soil_data <- readr::read_delim(
 )
 ```
 
+
 ### Calculate log-response ratio
 ```{r}
 # We calculate the log-response ratio for each observation
@@ -32,16 +42,21 @@ soil_data <- soil_data %>%
   mutate(log_rr = log(mean_increased_CO2 / mean_ambient_CO2))
 ```
 
+
 ### Phase classification
 ```{r}
 # We classify observations into phases based on years
 soil_data <- soil_data %>%
-  mutate(phase = case_when(
-    Time_years < 3  ~ "early",
-    Time_years <= 6 ~ "mid",
-    TRUE            ~ "late"
-  ))
+  mutate(
+    phase = case_when(
+      Time_years < 3  ~ "early",
+      Time_years <= 6 ~ "mid",
+      TRUE            ~ "late"
+    ),
+    phase = factor(phase, levels = c("early", "mid", "late"))
+  )
 ```
+
 
 ### Aggregation of log-response ration by phase
 ```{r}
@@ -52,7 +67,11 @@ phase_summary <- soil_data %>%
             .groups = "drop")
 
 # Display the result as a formatted table
-kable(phase_summary, caption = "Mean Log-Response Ratio by Phase")
+kable(phase_summary, caption = "Mean log-response ratio by phase")
 ```
 
+
 ### Discussion
+Our analysis showed a slightly lower soil organic carbon under elevated CO₂ compared to ambient conditions, the early (−1.9%) and late (−2.3%) phases suggest that in those time windows, decomposition processes outweigh any gains from extra carbon inputs. Meanwhile, the mid phase shows a small positive LRR (~+1.4%), implying a minor net increase in SOC relative to ambient CO₂ during years 3–6.
+
+These results suggest that elevated CO₂ does not lead to a strong accumulation during the initial phase as we hypothesized in the introduction. Any initial uptake of carbon under elevated CO₂ (mid phase) is offset in the early and late phases, likely because microbial decomposition increases and negates the benefit of additional carbon inputs. This finding aligns with the main conclusion of van Groenigen et al. (2014), where short-term increases in soil carbon under elevated CO₂ can be partially or fully canceled out by enhanced turnover over time.

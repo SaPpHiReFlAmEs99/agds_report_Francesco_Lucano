@@ -11,7 +11,7 @@
 
 <meta name="author" content="Francesco Lucano" />
 
-<meta name="date" content="2025-03-30" />
+<meta name="date" content="2025-03-31" />
 
 <title>Report Exercise 4.6</title>
 
@@ -352,14 +352,25 @@ display: none;
 
 <h1 class="title toc-ignore">Report Exercise 4.6</h1>
 <h4 class="author">Francesco Lucano</h4>
-<h4 class="date">2025-03-30</h4>
+<h4 class="date">2025-03-31</h4>
 
 </div>
 
 
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>Here I briefly describe the purpose of this report.</p>
+<p>In this exercise we analyze soil organic carbon (SOC) data from
+experiments where ecosystems were exposed to ambient and elevated CO₂
+conditions. Our goal is to calculate a log-response ratio (LRR) defined
+as <span class="math display">\[
+\text{LRR} =
+\ln\left(\frac{\text{SOC}_{\text{elevated}}}{\text{SOC}_{\text{ambient}}}\right)
+\]</span> This ratio quantifies the effect of elevated CO₂ on SOC. We
+then group the data by the number of years since the experiment: - Early
+(&lt;3 years) - Mid (3–6 years) - Late (&gt;6 years)</p>
+<p>Our hypothesis is that elevated CO₂ initially increases SOC by
+boosting plant growth and carbon input into the soil, but over time,
+enhanced microbial decomposition limits further SOC accumulation.</p>
 <div id="setup" class="section level3">
 <h3>Setup</h3>
 </div>
@@ -373,11 +384,14 @@ soil_data &lt;- soil_data %&gt;%
 <h3>Phase classification</h3>
 <pre class="r"><code># We classify observations into phases based on years
 soil_data &lt;- soil_data %&gt;%
-  mutate(phase = case_when(
-    Time_years &lt; 3  ~ &quot;early&quot;,
-    Time_years &lt;= 6 ~ &quot;mid&quot;,
-    TRUE            ~ &quot;late&quot;
-  ))</code></pre>
+  mutate(
+    phase = case_when(
+      Time_years &lt; 3  ~ &quot;early&quot;,
+      Time_years &lt;= 6 ~ &quot;mid&quot;,
+      TRUE            ~ &quot;late&quot;
+    ),
+    phase = factor(phase, levels = c(&quot;early&quot;, &quot;mid&quot;, &quot;late&quot;))
+  )</code></pre>
 </div>
 <div id="aggregation-of-log-response-ration-by-phase" class="section level3">
 <h3>Aggregation of log-response ration by phase</h3>
@@ -388,9 +402,9 @@ phase_summary &lt;- soil_data %&gt;%
             .groups = &quot;drop&quot;)
 
 # Display the result as a formatted table
-kable(phase_summary, caption = &quot;Mean Log-Response Ratio by Phase&quot;)</code></pre>
+kable(phase_summary, caption = &quot;Mean log-response ratio by phase&quot;)</code></pre>
 <table>
-<caption>Mean Log-Response Ratio by Phase</caption>
+<caption>Mean log-response ratio by phase</caption>
 <thead>
 <tr class="header">
 <th align="left">phase</th>
@@ -403,18 +417,33 @@ kable(phase_summary, caption = &quot;Mean Log-Response Ratio by Phase&quot;)</co
 <td align="right">-0.0193016</td>
 </tr>
 <tr class="even">
-<td align="left">late</td>
-<td align="right">-0.0234648</td>
-</tr>
-<tr class="odd">
 <td align="left">mid</td>
 <td align="right">0.0141434</td>
+</tr>
+<tr class="odd">
+<td align="left">late</td>
+<td align="right">-0.0234648</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div id="discussion" class="section level3">
 <h3>Discussion</h3>
+<p>Our analysis showed a slightly lower soil organic carbon under
+elevated CO₂ compared to ambient conditions, the early (−1.9%) and late
+(−2.3%) phases suggest that in those time windows, decomposition
+processes outweigh any gains from extra carbon inputs. Meanwhile, the
+mid phase shows a small positive LRR (~+1.4%), implying a minor net
+increase in SOC relative to ambient CO₂ during years 3–6.</p>
+<p>These results suggest that elevated CO₂ does not lead to a strong
+accumulation during the initial phase as we hypothesized in the
+introduction. Any initial uptake of carbon under elevated CO₂ (mid
+phase) is offset in the early and late phases, likely because microbial
+decomposition increases and negates the benefit of additional carbon
+inputs. This finding aligns with the main conclusion of van Groenigen et
+al. (2014), where short-term increases in soil carbon under elevated CO₂
+can be partially or fully canceled out by enhanced turnover over
+time.</p>
 </div>
 </div>
 
