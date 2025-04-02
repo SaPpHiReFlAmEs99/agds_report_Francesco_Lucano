@@ -1,0 +1,99 @@
+---
+title: "Report exercise 5.5"
+author: "Francesco Lucano"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Introduction
+
+
+### Setup
+```{r setup, include=FALSE}
+# Load necessary libraries 
+library(dplyr)     
+library(ggplot2)   
+library(knitr)
+library(lubridate)
+
+# We convert the dataset into a tibble
+airq <- as_tibble(airquality)
+
+# We remove missing data from Ozone and Solar.r columns
+airq_clean <- airq %>%
+  filter(!is.na(Ozone) & !is.na(Solar.R))
+```
+
+
+### Key statistical metrics
+```{r}
+# We calculate key metrics for both Ozone and Solar.R
+metrics <- airq_clean %>%
+  summarise(
+    mean_ozone  = mean(Ozone),
+    median_ozone = median(Ozone),
+    min_ozone   = min(Ozone),
+    max_ozone   = max(Ozone),
+    sd_ozone    = sd(Ozone),
+    mean_solar  = mean(Solar.R),
+    median_solar = median(Solar.R),
+    min_solar   = min(Solar.R),
+    max_solar   = max(Solar.R),
+    sd_solar    = sd(Solar.R)
+  )
+# Display the metrics as a table.
+kable(metrics, caption = "Summary statistics for ozone and solar radiation")
+```
+
+
+### Correlation
+```{r}
+# We Calculate the correlation between Solar.R and Ozone
+correlation <- cor(airq_clean$Solar.R, airq_clean$Ozone)
+print(paste("Correlation between Solar.R and Ozone:", round(correlation, 3)))
+```
+
+
+### Scatter Plot with regression line
+```{r}
+# We fit a linear model to quantify the relationship
+model <- lm(Ozone ~ Solar.R, data = airq_clean)
+
+# We Calculate the correlation between Solar.R and Ozone
+cor_val <- round(cor(airq_clean$Solar.R, airq_clean$Ozone), 3)
+
+# We visualize the relationship with a scatter plot and overlay the fitted regression line.
+scatter_plot <- ggplot(airq_clean, aes(x = Solar.R, y = Ozone)) +
+  geom_point(color = "black", alpha = 1) +                       
+  geom_smooth(method = "lm", color = "red", se = FALSE) +        
+  labs(title = "Scatter plot: Ozone vs. Solar radiation",
+       subtitle = paste("Correlation =", cor_val),
+       x = "Solar radiation (lang)",
+       y = "Ozone (ppb)") +
+  theme_classic()
+scatter_plot
+```
+
+
+### Histogram of ozone concentration 
+```{r}
+hist_ozone <- ggplot(airq_clean, aes(x = Ozone)) +
+  geom_histogram(binwidth = 10, fill = "skyblue", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of ozone concentration",
+       x = "Ozone (ppb)",
+       y = "Count") +
+  theme_minimal()
+hist_ozone
+```
+
+
+### Boxplot of ozone by month
+```{r}
+boxplot_ozone <- ggplot(airq_clean, aes(x = factor(Month), y = Ozone)) +
+  geom_boxplot(fill = "lightgrey") +
+  labs(title = "Boxplot of ozone by month",
+       x = "Month (5 = May, 6 = June, 7 = July, 8 = August, 9 = September)",
+       y = "Ozone (ppb)") +
+  theme_minimal()
+boxplot_ozone
+```
