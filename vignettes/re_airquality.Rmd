@@ -2,10 +2,25 @@
 title: "Report exercise 5.5"
 author: "Francesco Lucano"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
 ---
 
+
 # Introduction
+The airquality dataset is a built-in R dataset containing daily atmospheric measurements taken in New York from May 1, 1973, to September 30, 1973. Data were collected by the New York State Department of Conservation for ozone measurements and by the National Weather Service for meteorological variables. The dataset includes:
+
+• Ozone: Mean ozone (in ppb) calculated from measurements taken between 1:00 PM and 3:00 PM at Roosevelt Island.
+
+• Solar.R: Solar radiation (in Langleys) measured from 8:00 AM to 12:00 PM.
+
+• Wind: Average wind speed (in mph) recorded at 7:00 AM and 10:00 AM.
+
+• Temperature: Maximum daily temperature (°F).
+
+• Month and Day: Representing the date of the measurement.
 
 
 ### Setup
@@ -23,9 +38,10 @@ airq <- as_tibble(airquality)
 airq_clean <- airq %>%
   filter(!is.na(Ozone) & !is.na(Solar.R))
 ```
+In order to answer the question, “How does solar radiation influence ozone levels?”, we will focus specifically on the Ozone and Solar.R variables. Before computing statistical metrics and visualizations, rows with missing values were removed. This ensures that the analysis is based on complete cases only, which minimizes potential biases in the relationship between solar radiation and ozone levels.
 
 
-### Key statistical metrics
+#### Key statistical metrics
 ```{r}
 # We calculate key metrics for both Ozone and Solar.R
 metrics <- airq_clean %>%
@@ -52,9 +68,14 @@ kable(metrics, caption = "Summary statistics for ozone and solar radiation")
 correlation <- cor(airq_clean$Solar.R, airq_clean$Ozone)
 print(paste("Correlation between Solar.R and Ozone:", round(correlation, 3)))
 ```
+Pearson’s correlation analysis between Solar.R and Ozone yielded a coefficient of approximately 0.348. This moderate positive association suggests that as solar radiation increases, ozone levels tend to increase, supporting the atmospheric chemistry principle that sunlight drives photo-chemical ozone production. However, this moderate result indicates that other meteorological and anthropological factors influences the ozone production.
 
 
-### Scatter Plot with regression line
+### Data visualization
+To illustrate these findings, we produced three primary figures. A scatter plot of daily ozone measurements versus solar radiation, with a fitted linear regression line, demonstrates the positive trend despite noticeable dispersion among data points—indicating that additional factors are at play. A histogram of ozone concentration reveals that most observations cluster in the 10–40zppb range while a smaller number record very high values, leading to a right-skewed distribution. Finally, a boxplot of ozone by month shows that ozone levels peak in July and August, suggesting seasonal variability that may be driven by differences in solar exposure and temperature.
+
+
+#### Scatter Plot with regression line
 ```{r}
 # We fit a linear model to quantify the relationship
 model <- lm(Ozone ~ Solar.R, data = airq_clean)
@@ -75,7 +96,7 @@ scatter_plot
 ```
 
 
-### Histogram of ozone concentration 
+#### Histogram of ozone concentration 
 ```{r}
 hist_ozone <- ggplot(airq_clean, aes(x = Ozone)) +
   geom_histogram(binwidth = 10, fill = "skyblue", color = "black", alpha = 0.7) +
@@ -87,7 +108,7 @@ hist_ozone
 ```
 
 
-### Boxplot of ozone by month
+#### Boxplot of ozone by month
 ```{r}
 boxplot_ozone <- ggplot(airq_clean, aes(x = factor(Month), y = Ozone)) +
   geom_boxplot(fill = "lightgrey") +
@@ -97,3 +118,7 @@ boxplot_ozone <- ggplot(airq_clean, aes(x = factor(Month), y = Ozone)) +
   theme_minimal()
 boxplot_ozone
 ```
+
+
+### Conclusion
+Our analysis supports the hypothesis that increased solar radiation contributes to higher ozone levels. The moderate correlation, combined with the upward trend observed in the regression model and the seasonal patterns evident in the boxplot, confirms that solar radiation is a key driver of ozone formation. However, the observed variability in the data suggests that other factors, such as additional meteorological influences and anthropogenic emissions, also impact ozone levels
