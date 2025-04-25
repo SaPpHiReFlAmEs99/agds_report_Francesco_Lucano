@@ -60,4 +60,68 @@ cat("\n--- Starting Iterative Selection ---\n") # Use cat for newline
 ```
 
 ```{r}
+# best_model_aic holds the AIC of our current best model 
+# selected_predictors holds the predictors in the current best model
+# remaining_predictors holds the predictors still left to try
+
+while (length(remaining_predictors) > 0) {
+
+  ############### We try adding one predictor (inner loop), 1 predictor per round ###############
+  best_aic_this_iteration <- Inf 
+  predictor_to_add_this_iteration <- NULL 
+  
+  print(paste("Trying following predictors: {", paste(selected_predictors, collapse=", "), "} ")) 
+
+  for (predictor in remaining_predictors) { # We a predictor 
+    
+    # We make a temporary model to test each predictor
+    current_predictors_try <- c(selected_predictors, predictor)
+    formula_str <- paste(target_variable, "~", paste(current_predictors_try, collapse = " + "))
+    current_formula <- as.formula(formula_str)
+    
+    # We evaluate the temporary model with AIC, we use tryCactch to handle error in case of collinearity
+    current_model <- tryCatch({ lm(current_formula, data = df_clean) }, error = function(e) { NULL })
+    
+    if (!is.null(current_model)) {
+        current_aic <- AIC(current_model) 
+        
+        # We compare the AIC of the temporary model with the best AIC so far 
+        if (current_aic < best_aic_this_iteration) {
+            best_aic_this_iteration <- current_aic # Retains the new AIC if it is smaller
+            predictor_to_add_this_iteration <- predictor # Add the new predictor into the list of predictors if it improves the AIC
+        }
+    }
+  }  # end of the inner loop
+
+  ###################### Comparaison with best model (initial model) #############################
+  
+  # Did we find a best ingredient for this round and is its AIC better than the previous best overall AIC?
+  if (!is.null(predictor_to_add_this_iteration) && best_aic_this_iteration < best_model_aic) {
+    
+    # Yes
+    print(paste("   Best ingredient this round:", predictor_to_add_this_iteration, 
+                "| New Recipe AIC:", round(best_aic_this_iteration, 2), 
+                "(Improved from", round(best_model_aic, 2), ")"))
+    
+    # Update our best model
+    best_model_aic <- best_aic_this_iteration 
+    selected_predictors <- c(selected_predictors, predictor_to_add_this_iteration) 
+    remaining_predictors <- setdiff(remaining_predictors, predictor_to_add_this_iteration) # Remove predictor already tested
+    best_model_formula <- as.formula(paste(target_variable, "~", paste(selected_predictors, collapse = " + ")))
+    
+    # The while loop starts again in order to test a new predictor
+    
+  } else {
+    # No, adding the best remaining predictor didn't improve the AIC
+    print("   No further improvement possible or no ingredients left to test successfully.")
+    break # Stop the whole process and we exit the 'while' loop
+  } 
+    
+} # End of the main 'while' loop
+
+# --- Final Results of Selection ---
+cat("\n--- Stepwise forward selection finished ---\n")
+print(paste("Selected predictors:", paste(selected_predictors, collapse = ", ")))
+print(paste("Final model formula:", deparse(best_model_formula))) # deparse handles formula object nicely
+print(paste("Final model AIC:", round(best_model_aic, 2)))
 ```
