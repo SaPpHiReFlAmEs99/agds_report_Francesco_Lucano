@@ -5,6 +5,8 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+
+### Setup
 ```{r setup, include=FALSE}
 library(here)
 
@@ -16,34 +18,46 @@ df <- readr::read_delim(
 ```
 
 ```{r}
-# Define the target variable name
+# We define the target variable name
 target_variable <- "GPP_NT_VUT_REF"
 
-# Define potential predictor variable names, we exclude identifiers, timestamp, and the target itself
+# We define potential predictor variable names, we exclude identifiers, timestamp, and the target itself
 potential_predictors <- setdiff(names(df), c("siteid", "TIMESTAMP", "GPP_NT_VUT_REF"))
 
 # We keep only numeric predictors 
 numeric_predictors <- names(which(sapply(df[, potential_predictors], is.numeric)))
-potential_predictors <- numeric_predictors # Use only numeric ones
+potential_predictors <- numeric_predictors 
 
-# Create a subset of the dataframe with only the target and potential predictors
+# We create a subset of the dataframe with only the target and potential predictors
 df_subset <- df[, c(target_variable, potential_predictors)]
 ```
 
 ```{r}
-# Handle missing values: Remove rows with NA in any selected column
-# IMPORTANT: This removes a lot of data if NAs are scattered.
-# Alternative: Only remove NAs based on target and predictors actually used in a *specific* model inside the loop,
-# but that makes direct AIC comparison tricky as models might be fit on slightly different data subsets.
-# Using na.omit() on the relevant subset is usually the standard approach for this type of exercise.
+# We remove any row that has at least a NA
 df_clean <- na.omit(df_subset)
 
 # Check dimensions after removing NAs
 print(paste("Original dimensions:", dim(df)[1], "rows"))
 print(paste("Dimensions after NA removal:", dim(df_clean)[1], "rows"))
+```
 
-# If df_clean is empty or has too few rows, the NA handling might be too aggressive.
-if (nrow(df_clean) < (length(potential_predictors) + 2)) {
-  stop("Not enough data remaining after removing NAs to perform regression.")
-}
+
+### Stepwise forward regression algorithm implementation
+```{r}
+# We initialize lists to keep track of predictors
+selected_predictors <- c() # Start with an empty set of selected predictors
+remaining_predictors <- potential_predictors # Start with all potential predictors as remaining
+
+# Initialize variables to track the best model found so far
+# We start with the intercept-only model as the 'best' initially
+best_model_formula <- as.formula(paste(target_variable, "~ 1")) 
+initial_model <- lm(best_model_formula, data = df_clean)
+best_model_aic <- AIC(initial_model) # AIC of the intercept-only model
+
+print(paste("Starting AIC (Intercept-only model):", round(best_model_aic, 2)))
+print(paste("Predictors available to test:", paste(remaining_predictors, collapse=", ")))
+cat("\n--- Starting Iterative Selection ---\n") # Use cat for newline
+```
+
+```{r}
 ```
