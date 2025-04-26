@@ -19,7 +19,7 @@ Our hypothesis is that elevated CO₂ initially increases SOC by boosting plant 
 
 
 ### Setup
-```{r setup, include=FALSE}
+```{r setup, warning=FALSE, message=FALSE}
 # Load necessary packages
 library(dplyr)    
 library(readr)      
@@ -36,7 +36,7 @@ soil_data <- readr::read_delim(
 
 
 ### Calculate log-response ratio
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We calculate the log-response ratio for each observation
 soil_data <- soil_data %>%
   mutate(log_rr = log(mean_increased_CO2 / mean_ambient_CO2))
@@ -44,7 +44,7 @@ soil_data <- soil_data %>%
 
 
 ### Phase classification
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We classify observations into phases based on years
 soil_data <- soil_data %>%
   mutate(
@@ -59,7 +59,7 @@ soil_data <- soil_data %>%
 
 
 ### Aggregation of log-response ration by phase
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # we aggregate log-response ratios by phase by taking their mean
 phase_summary <- soil_data %>%
   group_by(phase) %>%

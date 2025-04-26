@@ -7,8 +7,9 @@ output: html_document
 
 
 ### Setup
-```{r setup, include=FALSE}
+```{r setup, warning=FALSE, message=FALSE}
 library(here)
+library(ggplot2)
 
 # Read the CSV file
 df <- readr::read_delim(
@@ -17,7 +18,7 @@ df <- readr::read_delim(
 )
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We define the target variable name
 target_variable <- "GPP_NT_VUT_REF"
 
@@ -32,7 +33,7 @@ potential_predictors <- numeric_predictors
 df_subset <- df[, c(target_variable, potential_predictors)]
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We remove any row that has at least a NA
 df_clean <- na.omit(df_subset)
 
@@ -43,7 +44,7 @@ print(paste("Dimensions after NA removal:", dim(df_clean)[1], "rows"))
 
 
 ### Stepwise forward regression algorithm implementation
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We initialize lists to keep track of predictors
 selected_predictors <- c() # Start with an empty set of selected predictors
 remaining_predictors <- potential_predictors # Start with all potential predictors as remaining
@@ -53,13 +54,9 @@ remaining_predictors <- potential_predictors # Start with all potential predicto
 best_model_formula <- as.formula(paste(target_variable, "~ 1")) 
 initial_model <- lm(best_model_formula, data = df_clean)
 best_model_aic <- AIC(initial_model) # AIC of the intercept-only model
-
-print(paste("Starting AIC (Intercept-only model):", round(best_model_aic, 2)))
-print(paste("Predictors available to test:", paste(remaining_predictors, collapse=", ")))
-cat("\n--- Starting Iterative Selection ---\n") # Use cat for newline
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # best_model_aic holds the AIC of our current best model 
 # selected_predictors holds the predictors in the current best model
 # remaining_predictors holds the predictors still left to try
@@ -70,7 +67,6 @@ while (length(remaining_predictors) > 0) {
   best_aic_this_iteration <- Inf 
   predictor_to_add_this_iteration <- NULL 
   
-  print(paste("Trying following predictors: {", paste(selected_predictors, collapse=", "), "} ")) 
 
   for (predictor in remaining_predictors) { # We a predictor 
     
@@ -93,17 +89,13 @@ while (length(remaining_predictors) > 0) {
     }
   }  # end of the inner loop
 
-  ###################### Comparaison with best model (initial model) #############################
+  ###################### Comparaison with best model #################################
   
-  # Did we find a best ingredient for this round and is its AIC better than the previous best overall AIC?
-  if (!is.null(predictor_to_add_this_iteration) && best_aic_this_iteration < best_model_aic) {
+  # We check if in this round we found a better AIC (and a better model) compared to the previous best result
+  if (best_aic_this_iteration < best_model_aic) {
     
-    # Yes
-    print(paste("   Best ingredient this round:", predictor_to_add_this_iteration, 
-                "| New Recipe AIC:", round(best_aic_this_iteration, 2), 
-                "(Improved from", round(best_model_aic, 2), ")"))
     
-    # Update our best model
+    # Yes, update our best model
     best_model_aic <- best_aic_this_iteration 
     selected_predictors <- c(selected_predictors, predictor_to_add_this_iteration) 
     remaining_predictors <- setdiff(remaining_predictors, predictor_to_add_this_iteration) # Remove predictor already tested
@@ -113,7 +105,6 @@ while (length(remaining_predictors) > 0) {
     
   } else {
     # No, adding the best remaining predictor didn't improve the AIC
-    print("   No further improvement possible or no ingredients left to test successfully.")
     break # Stop the whole process and we exit the 'while' loop
   } 
     
@@ -124,4 +115,38 @@ cat("\n--- Stepwise forward selection finished ---\n")
 print(paste("Selected predictors:", paste(selected_predictors, collapse = ", ")))
 print(paste("Final model formula:", deparse(best_model_formula))) # deparse handles formula object nicely
 print(paste("Final model AIC:", round(best_model_aic, 2)))
+```
+
+
+### Final model fitting and result visualization
+```{r, warning=FALSE, message=FALSE} 
+# We fit the final linear model using the formula decided by the stepwise process
+final_model <- lm(best_model_formula, data = df_clean)
+
+print(summary(final_model)) 
+
+# We add predictions as a new column to the dataframe and we use the final model to calculate the predicted GPP values
+df_clean$predicted_GPP <- predict(final_model, newdata = df_clean)
+
+# We create the scatter plot
+plot_gpp <- ggplot(df_clean, aes(x = .data[[target_variable]], y = predicted_GPP)) +
+  geom_point(alpha = 0.5) + 
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red", size = 1) + 
+  labs(
+    title = "Observed vs. Predicted GPP",
+    subtitle = paste("Stepwise forward regression model (Final AIC =", round(best_model_aic, 2), ")"),
+    x = "Observed GPP (GPP_NT_VUT_REF)", 
+    y = "Predicted GPP"
+  ) +
+  theme_minimal()
+
+# Print the plot to display it in the R Markdown output
+print(plot_gpp) 
+
+################ Calculate Final RMSE ###########################
+# Calculate residuals (actual - predicted)
+residuals_final <- df_clean[[target_variable]] - df_clean$predicted_GPP
+# Calculate RMSE
+rmse_final <- sqrt(mean(residuals_final^2))
+print(paste("Final model root mean squared error (RMSE):", round(rmse_final, 3)))
 ```

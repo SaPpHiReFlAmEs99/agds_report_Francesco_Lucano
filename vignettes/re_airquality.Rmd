@@ -24,7 +24,7 @@ The airquality dataset is a built-in R dataset containing daily atmospheric meas
 
 
 ### Setup
-```{r setup, include=FALSE}
+```{r, warning=FALSE, message=FALSE}
 # Load necessary libraries 
 library(dplyr)     
 library(ggplot2)   
@@ -42,7 +42,7 @@ In order to answer the question, “How does solar radiation influence ozone lev
 
 
 #### Key statistical metrics
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We calculate key metrics for both Ozone and Solar.R
 metrics <- airq_clean %>%
   summarise(
@@ -63,7 +63,7 @@ kable(metrics, caption = "Summary statistics for ozone and solar radiation")
 
 
 ### Correlation
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We Calculate the correlation between Solar.R and Ozone
 correlation <- cor(airq_clean$Solar.R, airq_clean$Ozone)
 print(paste("Correlation between Solar.R and Ozone:", round(correlation, 3)))
@@ -76,7 +76,7 @@ To illustrate these findings, we produced three primary figures. A scatter plot 
 
 
 #### Scatter Plot with regression line
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We fit a linear model to quantify the relationship
 model <- lm(Ozone ~ Solar.R, data = airq_clean)
 
@@ -97,7 +97,7 @@ scatter_plot
 
 
 #### Histogram of ozone concentration 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 hist_ozone <- ggplot(airq_clean, aes(x = Ozone)) +
   geom_histogram(binwidth = 10, fill = "skyblue", color = "black", alpha = 0.7) +
   labs(title = "Histogram of ozone concentration",
@@ -109,7 +109,7 @@ hist_ozone
 
 
 #### Boxplot of ozone by month
-```{r}
+```{r, warning=FALSE, message=FALSE}
 boxplot_ozone <- ggplot(airq_clean, aes(x = factor(Month), y = Ozone)) +
   geom_boxplot(fill = "lightgrey") +
   labs(title = "Boxplot of ozone by month",
