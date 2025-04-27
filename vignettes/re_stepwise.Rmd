@@ -10,6 +10,8 @@ output: html_document
 ```{r setup, warning=FALSE, message=FALSE}
 library(here)
 library(ggplot2)
+library(dplyr)  
+library(readr)    
 
 # Read the CSV file
 df <- readr::read_delim(
@@ -43,78 +45,95 @@ print(paste("Dimensions after NA removal:", dim(df_clean)[1], "rows"))
 ```
 
 
-### Stepwise forward regression algorithm implementation
+### Bivariate model evaluation
 ```{r, warning=FALSE, message=FALSE}
-# We initialize lists to keep track of predictors
-selected_predictors <- c() # Start with an empty set of selected predictors
-remaining_predictors <- potential_predictors # Start with all potential predictors as remaining
+# We calculate AIC of the intercept-only model
+intercept_formula <- as.formula(paste(target_variable, "~ 1"))  # We create a formula with only the intercept 
+intercept_model <- lm(intercept_formula, data = df_clean)       # We fit the intercept only model
+intercept_aic <- AIC(intercept_model)                           # We calculate the AIC for the intercept-only model
+print(paste("Intercept-only model AIC:", round(intercept_aic, 2)))
 
-# Initialize variables to track the best model found so far
-# We start with the intercept-only model as the 'best' initially
-best_model_formula <- as.formula(paste(target_variable, "~ 1")) 
-initial_model <- lm(best_model_formula, data = df_clean)
-best_model_aic <- AIC(initial_model) # AIC of the intercept-only model
+# We create an empty data frame to store results for bivariate models with two columns (predictor, aic)
+bivariate_results <- data.frame(predictor = character(), aic = numeric(), stringsAsFactors = FALSE)
+
+# We loop through each potential predictor to evaluate it alone
+for (predictor in potential_predictors) {
+  formula_str <- paste(target_variable, "~", predictor)
+  current_formula <- as.formula(formula_str)
+  # We try to fit the model, using tryCatch to handle potential errors (like collinearity)
+  current_model <- tryCatch({ lm(current_formula, data = df_clean) }, error = function(e) { NULL })
+  # Store AIC if model fitted successfully
+  if (!is.null(current_model)) {    #Checks if model fitting was successful (if tryCatch didn't return NULL)
+    current_aic <- AIC(current_model)
+    bivariate_results <- rbind(bivariate_results, data.frame(predictor = predictor, aic = current_aic))
+  }
+}
+
+# We find the best single predictor (lowest AIC)
+best_bivariate_model <- NULL 
+if (nrow(bivariate_results) > 0) {
+  best_bivariate_model <- bivariate_results %>% arrange(aic) %>% slice(1)             # We arrange the data frame by the aic column in ascending order and we select the first row (lowest AI)
+  print(paste("Best single predictor found:", best_bivariate_model$predictor))
+  print(paste("AIC with this single predictor:", round(best_bivariate_model$aic, 2)))
+}
 ```
 
+
+### Stepwise forward regression algorithm implementation
 ```{r, warning=FALSE, message=FALSE}
-# best_model_aic holds the AIC of our current best model 
-# selected_predictors holds the predictors in the current best model
-# remaining_predictors holds the predictors still left to try
+selected_predictors <- c(best_bivariate_model$predictor)                    # selected_predictors holds the predictors in the current best model
+remaining_predictors <- setdiff(potential_predictors, selected_predictors)  # remaining_predictors holds the predictors still left to try
+best_model_aic <- best_bivariate_model$aic                                  # best_model_aic holds the AIC of our current best model
 
-while (length(remaining_predictors) > 0) {
-
-  ############### We try adding one predictor (inner loop), 1 predictor per round ###############
-  best_aic_this_iteration <- Inf 
-  predictor_to_add_this_iteration <- NULL 
+while (length(remaining_predictors) > 0) {      # The loop continues as long there are still left potential predictors
   
+  best_aic_this_iteration <- Inf
+  predictor_to_add_this_iteration <- NULL
+  
+  ############### We try adding one predictor (inner loop), 1 predictor per round ###############
+  for (predictor in remaining_predictors) { 
 
-  for (predictor in remaining_predictors) { # We a predictor 
-    
     # We make a temporary model to test each predictor
     current_predictors_try <- c(selected_predictors, predictor)
     formula_str <- paste(target_variable, "~", paste(current_predictors_try, collapse = " + "))
     current_formula <- as.formula(formula_str)
-    
-    # We evaluate the temporary model with AIC, we use tryCactch to handle error in case of collinearity
+
+    # We try to fit the temporary model, using tryCatch to handle potential errors (like collinearity)
     current_model <- tryCatch({ lm(current_formula, data = df_clean) }, error = function(e) { NULL })
-    
-    if (!is.null(current_model)) {
-        current_aic <- AIC(current_model) 
-        
-        # We compare the AIC of the temporary model with the best AIC so far 
+
+    if (!is.null(current_model)) {          # We evaluate the model with AIC
+        current_aic <- AIC(current_model)
+
+        # We compare the AIC of the temporary model with the best AIC so far in this iteration
         if (current_aic < best_aic_this_iteration) {
-            best_aic_this_iteration <- current_aic # Retains the new AIC if it is smaller
-            predictor_to_add_this_iteration <- predictor # Add the new predictor into the list of predictors if it improves the AIC
+            best_aic_this_iteration <- current_aic        # Retains the new AIC if it is smaller for this iteration
+            predictor_to_add_this_iteration <- predictor  # Store the predictor associated with it
         }
     }
   }  # end of the inner loop
 
-  ###################### Comparaison with best model #################################
-  
-  # We check if in this round we found a better AIC (and a better model) compared to the previous best result
+  ###################### Comparison with overall best model #################################
+  # We check if the best predictor found in this round improves the overall best model AIC
   if (best_aic_this_iteration < best_model_aic) {
-    
-    
     # Yes, update our best model
-    best_model_aic <- best_aic_this_iteration 
-    selected_predictors <- c(selected_predictors, predictor_to_add_this_iteration) 
+    best_model_aic <- best_aic_this_iteration # Update overall best AIC
+    selected_predictors <- c(selected_predictors, predictor_to_add_this_iteration) # Add the predictor
     remaining_predictors <- setdiff(remaining_predictors, predictor_to_add_this_iteration) # Remove predictor already tested
-    best_model_formula <- as.formula(paste(target_variable, "~", paste(selected_predictors, collapse = " + ")))
-    
-    # The while loop starts again in order to test a new predictor
-    
+    # The while loop starts again
+
   } else {
     # No, adding the best remaining predictor didn't improve the AIC
-    break # Stop the whole process and we exit the 'while' loop
-  } 
-    
-} # End of the main 'while' loop
+    break # Stop the whole process and we exit the while loop
+  }
 
-# --- Final Results of Selection ---
-cat("\n--- Stepwise forward selection finished ---\n")
+} # End of the main while loop
+
+######################################## Final results #################################
+cat("\n----- Stepwise forward selection finished -----\n")
+best_model_formula <- as.formula(paste(target_variable, "~", paste(selected_predictors, collapse = " + ")))
 print(paste("Selected predictors:", paste(selected_predictors, collapse = ", ")))
-print(paste("Final model formula:", deparse(best_model_formula))) # deparse handles formula object nicely
-print(paste("Final model AIC:", round(best_model_aic, 2)))
+print(paste("Final model formula:", deparse(best_model_formula)))
+print(paste("Final model AIC:", round(best_model_aic, 2))) # This AIC comes from the stepwise process
 ```
 
 
@@ -135,12 +154,11 @@ plot_gpp <- ggplot(df_clean, aes(x = .data[[target_variable]], y = predicted_GPP
   labs(
     title = "Observed vs. Predicted GPP",
     subtitle = paste("Stepwise forward regression model (Final AIC =", round(best_model_aic, 2), ")"),
-    x = "Observed GPP (GPP_NT_VUT_REF)", 
-    y = "Predicted GPP"
+    x = "Observed GPP (GPP_NT_VUT_REF, umol CO2 / m^2 / s)", 
+    y = "Predicted GPP (umol CO2 / m^2 / s)"
   ) +
   theme_minimal()
 
-# Print the plot to display it in the R Markdown output
 print(plot_gpp) 
 
 ################ Calculate Final RMSE ###########################
@@ -150,3 +168,13 @@ residuals_final <- df_clean[[target_variable]] - df_clean$predicted_GPP
 rmse_final <- sqrt(mean(residuals_final^2))
 print(paste("Final model root mean squared error (RMSE):", round(rmse_final, 3)))
 ```
+
+
+### Results and discussion
+The aim of this work was to model the gross primary productivity GPP (GPP_NT_VUT_REF) using stepwise forward regression. We started the process with a simple intercept-only model, which had an AIC of 49959.43. The stepwise forward selection algorithm identified the following 10 predictors as the best set according to AIC: `PPFD_IN`, `LW_IN_F`, `VPD_F`, `TA_F_MDS`, `WS_F`, `USTAR`, `SW_IN_F`, `P_F`, `CO2_F_MDS`, and `PA_F`. The final selected model, including these 10 predictors, resulted in a lower AIC of 42838.15, meaning we improved the model.
+
+The scatter plot shows that the correlation is positive as expected but there is quite a bit of scatter around the ideal prediction, especially at higher values where we observe an under-prediction of the model. Average values are more precise but there is a tendency to over-prediction, the lowest values are the most precise ones. 
+
+Looking at the key numbers from the model summary, we see that  all 10 selected predictors were highly statistically significant (p < 0.001) in the final model. This suggests that they each contribute uniquely to the model. We also observe a moderate overall fit (Adjusted R-squared) of 0.5285, meaning that approximately 52.8% of the variance in GPP is explained by this model. The RMSE value is 2.307. The overall model significance is very high, the tiny  p-value (< 2.2e-16 ) indicates that the entire model is statistically better than just predicting the average GPP.
+
+From an ecological perspective, the model's selection of predictors makes sense, including key drivers like light availability (`PPFD_IN`, `SW_IN_F`) and climatic factors (`TA_F_MDS`, `VPD_F`) which influence photosynthesis. The stepwise selection process also handled variable redundancy; for example, `TA_F` was likely excluded because the correlated `TA_F_MDS` variable was selected. This demonstrates how AIC is favorising a simpler model over a more complex one.  
