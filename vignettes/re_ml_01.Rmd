@@ -1,0 +1,77 @@
+---
+title: "Report 10.5"
+author: "Francesco Lucano"
+date: "5/5/2025"
+output: html_document
+---
+
+### Setup
+```{r setup, warning=FALSE, message=FALSE}
+library(readr)     
+library(dplyr)     
+library(lubridate) 
+library(ggplot2)   
+library(rsample)   
+library(recipes)   
+library(caret)     
+library(here)    
+
+# Read the CSV file
+flux_data <- readr::read_delim(
+  here("data", "FLX_CH-Dav_FLUXNET2015_FULLSET_DD_1997-2014_1-3.csv"),
+  delim = ","
+)
+```
+
+```{r}
+# We clean the data
+flux_data_cleaned <- flux_data %>%
+  # We elect only the columns we need
+  select(
+    TIMESTAMP,                 # Keep the timestamp
+    GPP_NT_VUT_REF,            # Gross primary production
+    NEE_VUT_REF_QC,            # Quality control
+    TA_F,                      # Air temperature
+    SW_IN_F,                   # Shortwave incoming radiation
+    LW_IN_F,                   # Longwave incoming radiation
+    VPD_F,                     # Vapor pressure deficit
+    P_F,                       # Precipitation
+    WS_F                       # Wind speed
+  ) %>%
+  # We rename GPP column for simplicity
+  rename(GPP = GPP_NT_VUT_REF) %>%
+  # We convert TIMESTAMP todDate object
+  mutate(TIMESTAMP = as_date(TIMESTAMP)) %>%
+  # We replace -9999 values with NA
+   mutate(across(where(is.numeric), ~na_if(.x, -9999))) %>%
+  # We filter rows only to keep good quality data (value 1)
+  filter(NEE_VUT_REF_QC == 1) %>%
+  # We remove rows where any of the remaining columns have NA values
+  select(TIMESTAMP, GPP, TA_F, SW_IN_F, LW_IN_F, VPD_F, P_F, WS_F) %>%
+  filter(complete.cases(.))
+```
+
+
+```{r}
+# We set the seed randomly
+set.seed(60249)
+
+# This create the initial split object (70% training, 30% testing).
+split_obj <- initial_split(flux_data_cleaned, prop = 0.70, strata = VPD_F)  # We stratify by Vapour pressure deficit to ensure that the distribution is similar in both the training set and the testing set
+
+# Extract the training data
+train_data <- training(split_obj)
+
+# Extract the testing data
+test_data <- testing(split_obj)
+
+# We check the dimensions (number of rows and columns)
+dim(flux_data_cleaned)
+dim(train_data)
+dim(test_data)
+
+# Summary
+summary(train_data$VPD_F)
+summary(test_data$VPD_F)
+```
+
