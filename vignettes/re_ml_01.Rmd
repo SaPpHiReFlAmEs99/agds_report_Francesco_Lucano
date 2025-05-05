@@ -5,7 +5,7 @@ date: "5/5/2025"
 output: html_document
 ---
 
-### Setup
+### Step 1: Setup
 ```{r setup, warning=FALSE, message=FALSE}
 library(readr)     
 library(dplyr)     
@@ -52,6 +52,7 @@ flux_data_cleaned <- flux_data %>%
 ```
 
 
+### Step 2: Data splitting (training and testing data)
 ```{r}
 # We set the seed randomly
 set.seed(60249)
@@ -73,5 +74,40 @@ dim(test_data)
 # Summary
 summary(train_data$VPD_F)
 summary(test_data$VPD_F)
+```
+
+
+### Step 3: Preprocessing
+```{r}
+# We define the recipe and we select the numeric predictors 
+gpp_recipe <- recipe(GPP ~ TA_F + SW_IN_F + LW_IN_F + VPD_F + P_F + WS_F, data = train_data) %>%
+  # We apply Yeo-Johnson transformation to all numeric predictors (makes the distributions of the variables more normal-like). We use it over the Box-Cox because because Box-Cox requires strictly positive (> 0) values, and our data          includes non-positive values in TA_F (negative) and P_F (zero)
+  step_YeoJohnson(all_predictors()) %>%
+  # We center all numeric predictors (subtract mean)
+  step_center(all_predictors()) %>%
+  # We scale all numeric predictors (divide by standard deviation)
+  step_scale(all_predictors())
+
+# Print the recipe
+print(gpp_recipe)
+```
+
+
+### Step 4: Train the linear regression model
+```{r}
+# We set the seed and set up training control for 10-fold cross-validation
+set.seed(60249) 
+train_control <- trainControl(method = "cv", number = 10)
+
+# We train the linear model using the recipe found in step 3, the training data and we specify that we want a linear regression method and cross-validation
+lm_fit <- train(
+  x = gpp_recipe,                
+  data = train_data,             
+  method = "lm",                
+  trControl = train_control     
+)
+
+# Print the results summary
+print(lm_fit)
 ```
 
