@@ -2,10 +2,12 @@
 title: "Report 10.5"
 author: "Francesco Lucano"
 date: "5/5/2025"
-output: html_document
+output:
+  html_document:
+    toc: true
 ---
-# Linear regression model and  K-Nearest Neighbors (KNN) model
-### 1 Setup
+# Part 1:  Linear regression model and K-Nearest Neighbors (KNN) model
+## 1. Setup
 ```{r setup, warning=FALSE, message=FALSE}
 library(readr)     
 library(dplyr)     
@@ -16,6 +18,7 @@ library(recipes)
 library(caret)     
 library(here)
 library(yardstick)
+library(tidyr)
 
 # Read the CSV file
 flux_data <- readr::read_delim(
@@ -41,8 +44,8 @@ flux_data_cleaned <- flux_data %>%
   ) %>%
   # We rename GPP column for simplicity
   rename(GPP = GPP_NT_VUT_REF) %>%
-  # We convert TIMESTAMP todDate object
-  mutate(TIMESTAMP = as_date(TIMESTAMP)) %>%
+  # We convert TIMESTAMP to date object after making it a character 
+  mutate(TIMESTAMP = as.Date(as.character(TIMESTAMP), format = "%Y%m%d")) %>%
   # We replace -9999 values with NA
    mutate(across(where(is.numeric), ~na_if(.x, -9999))) %>%
   # We filter rows only to keep good quality data (value 1)
@@ -53,7 +56,7 @@ flux_data_cleaned <- flux_data %>%
 ```
 
 
-### 2 Data splitting (training and testing data)
+## 2. Data splitting (training and testing data)
 ```{r}
 # We set the seed randomly
 set.seed(60249)
@@ -78,7 +81,7 @@ summary(test_data$VPD_F)
 ```
 
 
-### 3 Preprocessing
+## 3. Preprocessing
 ```{r}
 # We define the recipe and we select the numeric predictors 
 gpp_recipe <- recipe(GPP ~ TA_F + SW_IN_F + LW_IN_F + VPD_F + P_F + WS_F, data = train_data) %>%
@@ -94,7 +97,7 @@ print(gpp_recipe)
 ```
 
 
-### 4 Linear regression model
+## 4. Linear regression (LM) model
 ```{r}
 # We set the seed and set up training control for 10-fold cross-validation
 set.seed(60249) 
@@ -113,7 +116,7 @@ print(lm_fit)
 ```
 
 
-#### 4.1 Liner regression model evaluation on test data
+### 4.1. Liner regression model evaluation on test data
 ```{r}
 # Function to calculate metrics and create plots
 eval_model <- function(model, test_data, model_name) {
@@ -158,7 +161,7 @@ lm_eval <- eval_model(model = lm_fit, test_data = test_data, model_name = "Linea
 ```
 
 
-### 6 K-Nearest Neighbors (KNN) model
+## 5. K-Nearest Neighbors (KNN) model
 ```{r}
 # We set the seed
 set.seed(60249)
@@ -177,11 +180,65 @@ print(knn_fit)
 ```
 
 
-#### 6.1 KNN model evaluation on test data
+### 5.1 KNN model evaluation on test data
 ```{r}
 # We use the same evaluation function we defined before
 knn_eval <- eval_model(model = knn_fit, test_data = test_data, model_name = "KNN (k=8)")
 ```
 
 
-# Results interpretation
+## 6. Results interpretation
+Analyzing the evaluation between the training and the test set, we can observe some interesting results. The variance didn't increase with the more complex KNN model compared to the simpler LM model. The R² drop was smaller for the KNN model and his value also higher:
+      - LM: CV R² ≈ 0.698 --> Test R² ≈ 0.688 (Drop ≈ 0.010)
+      - KNN (k=8): CV R² ≈ 0.729 --> Test R² ≈ 0.727 (Drop ≈ 0.002)
+This means that the KNN model with k=8, despite being more flexible than the LM model,generalized well from the training data to the test data without significant overfitting. 
+
+The KNN model also had clearly better test set metrics (RMSE: 1.438 vs 1.537; R²: 0.727 vs 0.688). This means that it has a lower bias compared to the LM model. This also strongly suggests that the underlying relationship between the environmental predictors (temperature, radiation, VPD, etc.) and GPP is likely not strictly linear, so the the assumption of linearity of the LM model doesn't fully capture the real-world complexity unlike the more flexible KNN model. 
+
+So in brief, the linear regression model is positioned more towards the high bias low variance end of the spectrum because of its rigid  linear assumption preventing it from fitting the data perfectly. This inherent simplicity also means it's less sensitive to noise in the training data, resulting in low variance, as evidenced by the small drop in performance from CV to test.
+The K-Nearest Neighbors model positioned more towards the lower bias end of the spectrum by being flexible enough to capture more of the true relationship. While more flexible models like KNN can be prone to higher variance, for this specific dataset and the choice of k=8  appears to have effectively managed this variance, leading to minimal overfitting, as shown by the very small drop in performance between CV and test results
+
+
+## 7. Temporal variations of observed and modelled GPP
+```{r}
+# We create a new data frame for the plot
+time_series_plot_data <- test_data
+
+# We add predictions from the linear model
+time_series_plot_data$lm_predictions <- predict(lm_fit, newdata = test_data)
+
+# We add predictions from the KNN model
+time_series_plot_data$knn_predictions <- predict(knn_fit, newdata = test_data)
+
+# We select the GPP and the time column for plotting
+plot_data_for_timeseries <- time_series_plot_data %>%
+  select(
+    Date = TIMESTAMP,          
+    Observed_GPP = GPP,        
+    LM_Predicted_GPP = lm_predictions,
+    KNN_Predicted_GPP = knn_predictions
+  ) %>%
+  arrange(Date) # Ensure data is sorted by Date 
+```
+
+
+```{r}
+# We reshape the data from wide to long format for ggplot2. Now we have a column for dates, a column "Source" which tells where each "GPP_Value" came from (observed, LM or KNN) and a "GPP_Value" column
+plot_data_long <- plot_data_for_timeseries %>%
+  pivot_longer(
+    cols = c("Observed_GPP", "LM_Predicted_GPP", "KNN_Predicted_GPP"),                   # List the columns that we want to stack up
+    names_to = "Source", 
+    values_to = "GPP_Value" 
+  )
+
+# Create the time series plot
+ggplot(plot_data_long, aes(x = Date, y = GPP_Value, color = Source)) +
+  geom_line(alpha = 1, linewidth = 0) + # Adjusted alpha and linewidth
+  labs(
+    title = "GPP time series: Observed vs. predicted (test set)",
+    x = "Date",
+    y = expression("GPP (gC m"^-2*" day"^-1*")"), # Formatted y-axis label
+    color = "Data Source:"
+  ) 
+```
+
