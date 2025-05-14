@@ -27,7 +27,7 @@ flux_data <- readr::read_delim(
 )
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We clean the data
 flux_data_cleaned <- flux_data %>%
   # We elect only the columns we need
@@ -57,7 +57,7 @@ flux_data_cleaned <- flux_data %>%
 
 
 ## 2. Data splitting (training and testing data)
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We set the seed randomly
 set.seed(60249)
 
@@ -82,7 +82,7 @@ summary(test_data$VPD_F)
 
 
 ## 3. Preprocessing
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We define the recipe and we select the numeric predictors 
 gpp_recipe <- recipe(GPP ~ TA_F + SW_IN_F + LW_IN_F + VPD_F + P_F + WS_F, data = train_data) %>%
   # We apply Yeo-Johnson transformation to all numeric predictors (makes the distributions of the variables more normal-like). We use it over the Box-Cox because because Box-Cox requires strictly positive (> 0) values, and our data          includes non-positive values in TA_F (negative) and P_F (zero)
@@ -98,7 +98,7 @@ print(gpp_recipe)
 
 
 ## 4. Linear regression (LM) model
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We set the seed and set up training control for 10-fold cross-validation
 set.seed(60249) 
 train_control <- trainControl(method = "cv", number = 10)
@@ -117,7 +117,7 @@ print(lm_fit)
 
 
 ### 4.1. Liner regression model evaluation on test data
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # Function to calculate metrics and create plots
 eval_model <- function(model, test_data, model_name) {
 
@@ -146,7 +146,7 @@ eval_model <- function(model, test_data, model_name) {
     geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red", size=1) + 
     labs(
       title = paste(model_name, ": Observed vs. Predicted GPP (test set)"),
-      subtitle = paste("RMSE:", round(rmse, 2), " R²:", round(rsquared, 2)),
+      subtitle = paste("RMSE:", round(rmse, 3), " R²:", round(rsquared, 3), "MAE: ", round(mae, 3)),
       x = "Observed GPP",
       y = "Predicted GPP"
     ) +
@@ -162,7 +162,7 @@ lm_eval <- eval_model(model = lm_fit, test_data = test_data, model_name = "Linea
 
 
 ## 5. K-Nearest Neighbors (KNN) model
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We set the seed
 set.seed(60249)
 
@@ -181,7 +181,7 @@ print(knn_fit)
 
 
 ### 5.1 KNN model evaluation on test data
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We use the same evaluation function we defined before
 knn_eval <- eval_model(model = knn_fit, test_data = test_data, model_name = "KNN (k=8)")
 ```
@@ -189,9 +189,12 @@ knn_eval <- eval_model(model = knn_fit, test_data = test_data, model_name = "KNN
 
 ## 6. Results interpretation
 Analyzing the evaluation between the training and the test set, we can observe some interesting results. The variance didn't increase with the more complex KNN model compared to the simpler LM model. The R² drop was smaller for the KNN model and his value also higher:
+
       - LM: CV R² ≈ 0.698 --> Test R² ≈ 0.688 (Drop ≈ 0.010)
+      
       - KNN (k=8): CV R² ≈ 0.729 --> Test R² ≈ 0.727 (Drop ≈ 0.002)
-This means that the KNN model with k=8, despite being more flexible than the LM model,generalized well from the training data to the test data without significant overfitting. 
+      
+This means that the KNN model with k=8, despite being more flexible than the LM model,generalized well from the training data to the test data without significant overfitting.
 
 The KNN model also had clearly better test set metrics (RMSE: 1.438 vs 1.537; R²: 0.727 vs 0.688). This means that it has a lower bias compared to the LM model. This also strongly suggests that the underlying relationship between the environmental predictors (temperature, radiation, VPD, etc.) and GPP is likely not strictly linear, so the the assumption of linearity of the LM model doesn't fully capture the real-world complexity unlike the more flexible KNN model. 
 
@@ -200,7 +203,7 @@ The K-Nearest Neighbors model positioned more towards the lower bias end of the 
 
 
 ## 7. Temporal variations of observed and modelled GPP
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We create a new data frame for the plot
 time_series_plot_data <- test_data
 
@@ -221,8 +224,7 @@ plot_data_for_timeseries <- time_series_plot_data %>%
   arrange(Date) # Ensure data is sorted by Date 
 ```
 
-
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # We reshape the data from wide to long format for ggplot2. Now we have a column for dates, a column "Source" which tells where each "GPP_Value" came from (observed, LM or KNN) and a "GPP_Value" column
 plot_data_long <- plot_data_for_timeseries %>%
   pivot_longer(
@@ -240,5 +242,196 @@ ggplot(plot_data_long, aes(x = Date, y = GPP_Value, color = Source)) +
     y = expression("GPP (gC m"^-2*" day"^-1*")"), # Formatted y-axis label
     color = "Data Source:"
   ) 
+```
+
+
+# Part 2: KNN tuning
+## 1. Hypothesis
+As k approaches 1, the training set MAE should be very low, potentially close to 0 (the model basically "memorize" the training data points) but the test set MAE should be high, potentially close to 1 (the model overfitted pattern doesn't generalize well on new data). The training set R² should be very high, potentially close to 1 (the model explains almost all the variance of the memorized training data), conversely the test set  R² should be low (the model doesn't generalize well, it explains little of the variance in the new data).
+
+As k approaches N, the training set MAE should be high (because it basically predict the average GPP, so predictions are poor for single individual training points) and the test set MAE should also be high. The training set  R² should be close to 0 (predicting the mean cannot explain the variance around it). The same is true for the test set  R².
+
+So, somewhere in the middle we should find an optimal k that minimize the variance and the bias (low MAE and high R²).
+
+
+## 2. Testing the hypothesis
+```{r, warning=FALSE, message=FALSE}
+# We define the range of k values we want to test
+k_values <- c(1, 2, 3, 5, 8, 10, 15, 20, 25, 30, 40, 50, 100, 200, 300, 400) 
+
+# We initialize a data frame to store the results
+performance_k <- data.frame()
+
+# We set the seed
+set.seed(60249)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Loop over each k value
+for (k_val in k_values) {
+  knn_model_k <- train(
+    x = gpp_recipe,
+    data = train_data, 
+    method = "knn",
+    tuneGrid = data.frame(k = k_val),
+    trControl = trainControl(method = "none") # We don't use resampling here because we want each specfic k on the full training set
+  )
+
+  # We make predictions on the training set
+  train_preds_k <- predict(knn_model_k, newdata = train_data)
+
+  # We calculate metrics for the training set
+  train_mae_k <- mae_vec(truth = train_data$GPP, estimate = train_preds_k)
+  train_rsq_k <- rsq_vec(truth = train_data$GPP, estimate = train_preds_k)
+
+  # We make predictions on the testing set
+  test_preds_k <- predict(knn_model_k, newdata = test_data)
+
+  # We calculate metrics for the testing set
+  test_mae_k <- mae_vec(truth = test_data$GPP, estimate = test_preds_k)
+  test_rsq_k <- rsq_vec(truth = test_data$GPP, estimate = test_preds_k)
+
+  # Store the results
+  performance_k <- rbind(performance_k, data.frame(
+    k = k_val,
+    Train_MAE = train_mae_k,
+    Train_R2 = train_rsq_k,
+    Test_MAE = test_mae_k,
+    Test_R2 = test_rsq_k
+  ))
+}
+
+# Performance results
+print(performance_k)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# We reshape the data in a long format 
+plot_data_train <- performance_k %>%
+  select(k, Train_MAE, Train_R2) %>%
+  pivot_longer(cols = c(Train_MAE, Train_R2), names_to = "Metric", values_to = "Value") %>%
+  mutate(Metric = gsub("Train_", "", Metric)) # Clean up metric names
+
+plot_data_test <- performance_k %>%
+  select(k, Test_MAE, Test_R2) %>%
+  pivot_longer(cols = c(Test_MAE, Test_R2), names_to = "Metric", values_to = "Value") %>%
+  mutate(Metric = gsub("Test_", "", Metric)) # Clean up metric names
+```
+
+```{r, warning=FALSE, message=FALSE}
+ggplot_train_metrics <- ggplot(plot_data_train, aes(x = k, y = Value, group = Metric, color = Metric)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  facet_wrap(~ Metric, scales = "free_y", ncol = 1, labeller = labeller(Metric = as_labeller(c(MAE = "MAE (Training set)", R2 = "R² (Training set)")))) +
+  labs(
+    title = "KNN performance on training set vs. Number of neighbors (k)",
+    x = "Number of neighbors (k)",
+    y = "Metric value",
+    color = "Metric"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") 
+
+print(ggplot_train_metrics)
+```
+
+```{r, warning=FALSE, message=FALSE}
+ggplot_test_metrics <- ggplot(plot_data_test, aes(x = k, y = Value, group = Metric, color = Metric)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  facet_wrap(~ Metric, scales = "free_y", ncol = 1, labeller = labeller(Metric = as_labeller(c(MAE = "MAE (Test set)", R2 = "R² (Test set)")))) +
+  labs(
+    title = "KNN performance on test set vs. Number of neighbors (k)",
+    x = "Number of neighbors (k)",
+    y = "Metric value",
+    color = "Metric"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+print(ggplot_test_metrics)
+```
+
+We can observe the overfitting region from the large discrepancy of performance between the training set and the test set. When the k value is low (e.g., k=1), we have excellent performance (extremely low MAE and extremely high R²) for the training set but very poor performance for the test set (low R² and high MAE). This indicates the model has learned the noise in the training data and doesn't generalize.
+
+We can also observe the underfitting region when using veri high k values. Beyond the optimal k range (approximately k=8 to k=25-30 in our plots), the performance metrics degrade on both the training and testing sets. As k becomes very large, the training data MAE continue to increase and the R² to decrease. This degradation is even more pronounced in the test set plot where for very high k values the MAE value increase and the R² value decrease even more rapidely. This signifies that the model has become too simple and cannot capture the underlying patterns in the data
+
+
+### 2.1. K-MAE function
+```{r, warning=FALSE, message=FALSE}
+# We define the function
+calculate_test_mae_for_k <- function(k_value, 
+                                     recipe_obj, 
+                                     training_data, 
+                                     testing_data, 
+                                     target_variable_name = "GPP") {knn_model <- train(x = recipe_obj, data = training_data, method = "knn", tuneGrid = data.frame(k = k_value), trControl = trainControl(method = "none"))
+  
+  # We make predictions on the testing set
+  test_predictions <- predict(knn_model, newdata = testing_data)
+  
+  # We calculate MAE for the testing set
+  test_mae <- mae_vec(truth = testing_data[[target_variable_name]], estimate = test_predictions)
+  
+  # Return the calculated MAE
+  return(test_mae)
+}
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Examples of use
+#k=5
+mae_for_k5 <- calculate_test_mae_for_k(k_value = 5, 
+                                       recipe_obj = gpp_recipe, 
+                                       training_data = train_data, 
+                                       testing_data = test_data,
+                                       target_variable_name = "GPP") # 
+print(paste("MAE for k=5:", mae_for_k5))
+
+# k=10
+mae_for_k10 <- calculate_test_mae_for_k(k_value = 10, 
+                                        recipe_obj = gpp_recipe, 
+                                        training_data = train_data, 
+                                        testing_data = test_data)
+print(paste("MAE for k=10:", mae_for_k10))
+
+k=20
+mae_for_k20 <- calculate_test_mae_for_k(k_value = 20, 
+                                        recipe_obj = gpp_recipe, 
+                                        training_data = train_data, 
+                                        testing_data = test_data)
+print(paste("MAE for k=20:", mae_for_k20))
+```
+
+
+## 3. K tuning
+```{r, warning=FALSE, message=FALSE}
+# Define a grid of k values to search
+k_values <- data.frame(k = 1:30)
+
+# Set seed
+set.seed(60249)
+
+# We train the KNN model over the k_values
+knn_tuned_model_for_optimal_k <- train(
+  x = gpp_recipe,
+  data = train_data,
+  method = "knn",
+  trControl = train_control,     
+  tuneGrid = k_values,   
+  metric = "MAE"             # We optimize for MAE
+)
+
+# Print the results summary 
+print(knn_tuned_model_for_optimal_k)
+
+# Plot the tuning results 
+plot(knn_tuned_model_for_optimal_k) 
+
+# Get the best k value found
+print(knn_tuned_model_for_optimal_k$bestTune)
+
+optimal_knn_eval <- eval_model(model = knn_tuned_model_for_optimal_k, 
+                               test_data = test_data, 
+                               model_name = "Optimal KNN (k=14)")
 ```
 
