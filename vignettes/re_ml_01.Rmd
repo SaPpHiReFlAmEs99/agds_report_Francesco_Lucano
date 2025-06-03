@@ -1,7 +1,7 @@
 ---
 title: "Report 10.5"
 author: "Francesco Lucano"
-date: "5/5/2025"
+date: "5/05/2025"
 output:
   html_document:
     toc: true
@@ -394,7 +394,7 @@ mae_for_k10 <- calculate_test_mae_for_k(k_value = 10,
                                         testing_data = test_data)
 print(paste("MAE for k=10:", mae_for_k10))
 
-k=20
+# k=20
 mae_for_k20 <- calculate_test_mae_for_k(k_value = 20, 
                                         recipe_obj = gpp_recipe, 
                                         training_data = train_data, 

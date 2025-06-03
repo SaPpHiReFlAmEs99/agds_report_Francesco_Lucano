@@ -1,0 +1,149 @@
+---
+title: "Report 11.5"
+author: "Francesco Lucano"
+date: "03/06/2025" 
+output:
+  html_document:
+    toc: true
+---
+## 1. Informations on site characteristics 
+Here we provide information about the characteristics of the 2 study sites,  Lägeren (CH-Lae) and Davos Seehornwald (CH-Dav). The information are draw from Etzold et al., 2011 and Zielis et al., 2014. 
+
+**Comparative characteristics of CH-Lae (Lägeren) and CH-Dav (Davos Seehornwald) forest sites**
+
+---
+
+**Location**
+
+* CH-Lae: Located in the Swiss Jura mountain range, representative of the montane zone.
+* CH-Dav: Situated in the Eastern Swiss Alps, representative of the subalpine zone.
+
+---
+
+**Elevation**
+
+* CH-Lae: 682 
+* CH-Dav: 1,639 
+
+---
+
+**Climate (mean annual values)**
+
+**Air Temperature (20-year average 1989-2009)**
+
+* CH-Lae: 7.4 °C 
+* CH-Dav: 3.4 °C 
+
+**Precipitation (20-year average 1989-2009)**
+
+* CH-Lae: 1000 mm 
+* CH-Dav: 1000 mm 
+
+---
+
+**Vegetation Type & Dominant Species**
+
+* CH-Lae: A mixed deciduous-dominated forest with a seasonal leaf course. Key species include *Fagus sylvatica L.* (European beech), *Picea abies (L.) Karst* (Norway spruce), *Fraxinus excelsior L.* (ash), and *Acer pseudoplatanus L.*.
+* CH-Dav: A coniferous forest, specifically a subalpine spruce forest, it's an evergreen site. Highly dominated by *Picea abies (L.) Karst* (Norway spruce).
+
+---
+
+**Maximum Leaf Area Index (LAI)**
+
+* CH-Lae: 1.7-5.5 m$^2$ m$^{-2}$ (reflecting seasonal variation).
+* CH-Dav: 3.9 m$^2$ m$^{-2}$ (more stable year-round).
+
+---
+
+**Summary**
+
+In essence, the two sites show marked difference that will affect Gross Primary Production (GPP) and they will works well to assess model perfomance.
+
+CH-Dav, represents a high-altitude subalpine environment characterized by a cold climate and snow precipitations that influence the GPP. Conversely, CH-Lae, a lower-altitude site, experiences a milder temperate climate. This altitudinal and climatic disparity directly translates into divergent growing season lengths and conditions.
+
+This translates into very different vegetation types. CH-Dav is an established evergreen coniferous forest, predominantly composed of spruce, which sustains its canopy throughout the year. Conversely, CH-Lae is a younger mixed forest, prominently composed of deciduous trees, notably beech. This structural difference results in distinct seasonal changes in leaf area and overall canopy coverage at CH-Lae.
+
+
+## 2. Data preparation
+```{r setup, warning=FALSE, message=FALSE}
+library(readr)     
+library(dplyr)     
+library(lubridate) 
+library(ggplot2)   
+library(rsample)   
+library(recipes)   
+library(caret)     
+library(here)
+library(yardstick)
+library(tidyr)
+
+# Load CH-Dav data
+flux_davos_raw <- readr::read_delim(
+  here::here("data", "FLX_CH-Dav_FLUXNET2015_FULLSET_DD_1997-2014_1-3.csv"),
+  delim = ","
+)
+
+# Load CH-Lae data
+flux_laegeren_raw <- readr::read_delim(
+  here::here("data", "FLX_CH-Lae_FLUXNET2015_FULLSET_DD_2004-2014_1-4.csv"),
+  delim = ","
+)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# We define a function in order to clean both dataset
+clean_flux_data <- function(raw_df) { 
+  df_cleaned <- raw_df %>%
+    # We select only the columns we need
+    select(
+      TIMESTAMP, GPP_NT_VUT_REF, NEE_VUT_REF_QC,
+      TA_F, SW_IN_F, LW_IN_F, VPD_F, P_F, WS_F
+    ) %>%
+    # We rename GPP column for simplicity
+    rename(GPP = GPP_NT_VUT_REF) %>%
+    # We convert TIMESTAMP to date object after making it a character 
+    mutate(TIMESTAMP = as.Date(as.character(TIMESTAMP), format = "%Y%m%d"),
+           # We replace -9999 values with NA
+           across(where(is.numeric), ~na_if(.x, -9999))) %>%
+    # We filter rows only to keep good quality data (value 1)
+    filter(NEE_VUT_REF_QC == 1) %>% 
+    # We remove rows where any of the remaining columns have NA values
+    select(TIMESTAMP, GPP, TA_F, SW_IN_F, LW_IN_F, VPD_F, P_F, WS_F) %>%
+    filter(complete.cases(.))
+  return(df_cleaned)
+}
+
+# Then we apply it:
+flux_davos_cleaned <- clean_flux_data(flux_davos_raw)
+flux_laegeren_cleaned <- clean_flux_data(flux_laegeren_raw)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# We add a site_id column to each cleaned dataset
+flux_davos_cleaned_labelled <- flux_davos_cleaned %>%
+  mutate(site_id = "CH-Dav")
+
+flux_laegeren_cleaned_labelled <- flux_laegeren_cleaned %>%
+  mutate(site_id = "CH-Lae")
+
+# We combine the two datasets
+flux_combined_cleaned <- bind_rows(flux_davos_cleaned_labelled, flux_laegeren_cleaned_labelled)
+
+# We convert site_id to a factor
+flux_combined_cleaned <- flux_combined_cleaned %>%
+  mutate(site_id = as.factor(site_id))
+
+# Summary
+print("Combined cleaned data head:")
+print(head(flux_combined_cleaned))
+print(dim(flux_combined_cleaned))
+print("Summary of combined data:")
+print(summary(flux_combined_cleaned))
+print("Counts per site:")
+print(table(flux_combined_cleaned$site_id))
+```
+
+
+## 3. Model training strategy
+
+
