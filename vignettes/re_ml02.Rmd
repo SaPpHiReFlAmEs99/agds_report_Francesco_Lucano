@@ -145,5 +145,124 @@ print(table(flux_combined_cleaned$site_id))
 
 
 ## 3. Model training strategy
+The goal of this step is to train three distinct, optimally tuned K-Nearest Neighbors (KNN) models:
+
+    - Model D: Trained using only the Davos data (flux_davos_cleaned_labelled).
+    - Model L: Trained using only the Laegern data (flux_laegeren_cleaned_labelled).
+    - Model C: Trained using the Combined data (flux_combined_cleaned).
 
 
+### 3.1. Data splitting 
+```{r, warning=FALSE, message=FALSE}
+# We define the data splitting function to use for each dataset 
+split_data_stratified <- function(input_df, 
+                                  split_proportion = 0.80,   # (80% training, 30% testing)
+                                  stratification_variable) { 
+
+  split_object <- initial_split(
+    data = input_df, 
+    prop = split_proportion, 
+    strata = {{ stratification_variable }} 
+  )
+  
+  # Extract the training data and testing data
+  training_set <- training(split_object)
+  testing_set <- testing(split_object)
+  
+  # Return a list containing the training and testing sets
+  return(list(train = training_set, test = testing_set))
+}
+```
+
+```{r, warning=FALSE, message=FALSE}
+set.seed(60249) 
+davos_splits <- split_data_stratified(
+  input_df = flux_davos_cleaned_labelled, 
+  split_proportion = 0.80, 
+  stratification_variable = VPD_F # We stratify by vapour pressure deficit to ensure that the distribution is similar in both the training set and the testing set
+)
+davos_train <- davos_splits$train
+davos_test <- davos_splits$test
+
+# Check dimensions
+print("Davos Train Dimensions:")
+print(dim(davos_train))
+print("Davos Test Dimensions:")
+print(dim(davos_test))
+
+set.seed(60249) 
+laegeren_splits <- split_data_stratified(
+  input_df = flux_laegeren_cleaned_labelled, 
+  split_proportion = 0.80, 
+  stratification_variable = VPD_F # We stratify by vapour pressure deficit to ensure that the distribution is similar in both the training set and the testing set
+)
+laegeren_train <- laegeren_splits$train
+laegeren_test <- laegeren_splits$test
+
+# Check dimensions
+print("Laegern Train Dimensions:")
+print(dim(laegeren_train))
+print("Laegern Test Dimensions:")
+print(dim(laegeren_test))
+
+set.seed(60249) 
+combined_splits <- split_data_stratified(
+  input_df = flux_combined_cleaned, 
+  split_proportion = 0.80, 
+  stratification_variable = site_id # We stratify by site_id for combined data
+)
+combined_train <- combined_splits$train
+combined_test <- combined_splits$test
+
+# Check dimensions
+print("Combined Train Dimensions:")
+print(dim(combined_train))
+print("Combined Test Dimensions:")
+print(dim(combined_test))
+print("Site distribution in Combined Train:")
+print(table(combined_train$site_id))
+print("Site distribution in Combined Test:")
+print(table(combined_test$site_id))
+```
+
+
+### 3.2. Preprocessing
+```{r, warning=FALSE, message=FALSE}
+# We define a function for preprocessing each training dataset
+preprocessing <- function(input_df) {
+# We define the recipe and we select the numeric predictors 
+  gpp_recipe <- recipe(GPP ~ TA_F + SW_IN_F + LW_IN_F + VPD_F + P_F + WS_F, data = input_df) %>%
+  # We apply Yeo-Johnson transformation to all numeric predictors (makes the distributions of the variables more normal-like). We use it over the Box-Cox because because Box-Cox requires strictly positive (> 0) values, and our data includes non-positive values in TA_F (negative) and P_F (zero)
+    step_YeoJohnson(all_predictors()) %>%
+  # We center all numeric predictors (subtract mean)
+    step_center(all_predictors()) %>%
+  # We scale all numeric predictors (divide by standard deviation)
+    step_scale(all_predictors())
+  
+    return(gpp_recipe) # Explicitly return the recipe object
+}
+```
+
+```{r, warning=FALSE, message=FALSE}
+gpp_recipe_davos <- preprocessing(input_df = davos_train)
+print(gpp_recipe_davos)
+
+gpp_recipe_laegeren <- preprocessing(input_df = laegeren_train)
+print(gpp_recipe_laegeren)
+
+gpp_recipe_combined <- preprocessing(input_df = combined_train)
+print(gpp_recipe_combined)
+```
+
+
+### 3.3. Hyperparameter tuning for the optimal k
+```{r, warning=FALSE, message=FALSE}
+# we set up training control for 10-fold cross-validation
+train_control_cv <- trainControl(
+  method = "cv",      
+  number = 10        
+)
+
+# We define the range of k values we want to test
+k_tuning_grid <- data.frame(k = 1:30)
+```

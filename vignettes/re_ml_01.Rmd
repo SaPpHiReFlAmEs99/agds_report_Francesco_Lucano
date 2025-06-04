@@ -62,7 +62,7 @@ flux_data_cleaned <- flux_data %>%
 set.seed(60249)
 
 # This create the initial split object (70% training, 30% testing).
-split_obj <- initial_split(flux_data_cleaned, prop = 0.70, strata = VPD_F)  # We stratify by Vapour pressure deficit to ensure that the distribution is similar in both the training set and the testing set
+split_obj <- initial_split(flux_data_cleaned, prop = 0.70, strata = VPD_F)  # We stratify by vapour pressure deficit to ensure that the distribution is similar in both the training set and the testing set
 
 # Extract the training data
 train_data <- training(split_obj)
@@ -85,7 +85,7 @@ summary(test_data$VPD_F)
 ```{r, warning=FALSE, message=FALSE}
 # We define the recipe and we select the numeric predictors 
 gpp_recipe <- recipe(GPP ~ TA_F + SW_IN_F + LW_IN_F + VPD_F + P_F + WS_F, data = train_data) %>%
-  # We apply Yeo-Johnson transformation to all numeric predictors (makes the distributions of the variables more normal-like). We use it over the Box-Cox because because Box-Cox requires strictly positive (> 0) values, and our data          includes non-positive values in TA_F (negative) and P_F (zero)
+  # We apply Yeo-Johnson transformation to all numeric predictors (makes the distributions of the variables more normal-like). We use it over the Box-Cox because because Box-Cox requires strictly positive (> 0) values, and our data includes non-positive values in TA_F (negative) and P_F (zero)
   step_YeoJohnson(all_predictors()) %>%
   # We center all numeric predictors (subtract mean)
   step_center(all_predictors()) %>%
@@ -108,7 +108,7 @@ lm_fit <- train(
   x = gpp_recipe,                
   data = train_data,             
   method = "lm",                
-  trControl = train_control     
+  trControl = train_control 
 )
 
 # Print the results summary
