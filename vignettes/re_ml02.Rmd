@@ -266,3 +266,58 @@ train_control_cv <- trainControl(
 # We define the range of k values we want to test
 k_tuning_grid <- data.frame(k = 1:30)
 ```
+
+```{r, warning=FALSE, message=FALSE}
+set.seed(60249) 
+
+model_davos_tuned <- train(
+  gpp_recipe_davos,        
+  data = davos_train,      
+  method = "knn",
+  trControl = train_control_cv, 
+  tuneGrid = k_tuning_grid,  
+  metric = "MAE"             
+  
+)
+
+print("Davos KNN model tuning summary:")
+print(model_davos_tuned)
+print(paste("Optimal k for Davos-only model (based on MAE):", model_davos_tuned$bestTune$k))
+plot(model_davos_tuned, main = "CV performance for Davos KNN Model")
+```
+
+```{r, warning=FALSE, message=FALSE}
+set.seed(60249) 
+
+model_laegeren_tuned <- train(
+  gpp_recipe_laegeren,     
+  data = laegeren_train,   
+  method = "knn",
+  trControl = train_control_cv,
+  tuneGrid = k_tuning_grid,
+  metric = "MAE"
+)
+
+print("Laegern KNN model tuning summary:")
+print(model_laegeren_tuned)
+print(paste("Optimal k for Laegern-only model (based on MAE):", model_laegeren_tuned$bestTune$k))
+plot(model_laegeren_tuned, main = "CV performance for Laegern KNN Model")
+```
+
+```{r, warning=FALSE, message=FALSE}
+set.seed(60249) 
+
+model_combined_tuned <- train(
+  gpp_recipe_combined,    
+  data = combined_train,  
+  method = "knn",
+  trControl = train_control_cv,
+  tuneGrid = k_tuning_grid,
+  metric = "MAE"
+)
+
+print("Combined KNN model tuning summary:")
+print(model_combined_tuned)
+print(paste("Optimal k for Combined data model (based on MAE):", model_combined_tuned$bestTune$k))
+plot(model_combined_tuned, main = "CV performance for combined KNN Model")
+```
