@@ -64,7 +64,9 @@ CH-Dav, represents a high-altitude subalpine environment characterized by a cold
 This translates into very different vegetation types. CH-Dav is an established evergreen coniferous forest, predominantly composed of spruce, which sustains its canopy throughout the year. Conversely, CH-Lae is a younger mixed forest, prominently composed of deciduous trees, notably beech. This structural difference results in distinct seasonal changes in leaf area and overall canopy coverage at CH-Lae.
 
 
-## 2. Data preparation
+## 2. KNN model training
+
+### 2.1. Data preparation
 ```{r setup, warning=FALSE, message=FALSE}
 library(readr)     
 library(dplyr)     
@@ -90,7 +92,7 @@ flux_laegeren_raw <- readr::read_delim(
 )
 ```
 
-```{r, warning=FALSE, message=FALSE}
+```{r message=FALSE, warning=FALSE}
 # We define a function in order to clean both dataset
 clean_flux_data <- function(raw_df) { 
   df_cleaned <- raw_df %>%
@@ -144,7 +146,6 @@ print(table(flux_combined_cleaned$site_id))
 ```
 
 
-## 3. Model training strategy
 The goal of this step is to train three distinct, optimally tuned K-Nearest Neighbors (KNN) models:
 
     - Model D: Trained using only the Davos data (flux_davos_cleaned_labelled).
@@ -152,7 +153,7 @@ The goal of this step is to train three distinct, optimally tuned K-Nearest Neig
     - Model C: Trained using the Combined data (flux_combined_cleaned).
 
 
-### 3.1. Data splitting 
+### 2.2. Data splitting 
 ```{r, warning=FALSE, message=FALSE}
 # We define the data splitting function to use for each dataset 
 split_data_stratified <- function(input_df, 
@@ -226,7 +227,7 @@ print(table(combined_test$site_id))
 ```
 
 
-### 3.2. Preprocessing
+### 2.3. Preprocessing
 ```{r, warning=FALSE, message=FALSE}
 # We define a function for preprocessing each training dataset
 preprocessing <- function(input_df) {
@@ -255,7 +256,7 @@ print(gpp_recipe_combined)
 ```
 
 
-### 3.3. Hyperparameter tuning for the optimal k
+### 2.4. Hyperparameter tuning for the optimal k
 ```{r, warning=FALSE, message=FALSE}
 # we set up training control for 10-fold cross-validation
 train_control_cv <- trainControl(
@@ -320,4 +321,134 @@ print("Combined KNN model tuning summary:")
 print(model_combined_tuned)
 print(paste("Optimal k for Combined data model (based on MAE):", model_combined_tuned$bestTune$k))
 plot(model_combined_tuned, main = "CV performance for combined KNN Model")
+```
+
+
+## 3. Model evaluation on test set
+```{r, warning=FALSE, message=FALSE}
+# We define a function to calculate metrics and create plots
+eval_model <- function(model, test_data, model_name) {
+
+  # We make predictions on the test data
+  predictions <- predict(model, newdata = test_data)
+
+  # We create a data holding observed and predicted values
+  eval_data <- data.frame(
+    Observed = test_data$GPP,
+    Predicted = predictions
+  )
+
+  # We calculate performance metrics using the built-in functions from the yardstick package
+  rmse_calc <- yardstick::rmse_vec(eval_data$Observed, eval_data$Predicted)
+  rsquared_calc <- yardstick::rsq_vec(eval_data$Observed, eval_data$Predicted)
+
+  # Create scatter plot
+  p <- ggplot(eval_data, aes(x = Observed, y = Predicted)) +
+    geom_point(alpha = 0.5) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red", linewidth = 1) + # Use linewidth
+    labs(
+      title = paste(model_name, ": Observed vs. Predicted GPP (test set)"),
+      subtitle = paste("RMSE:", round(rmse_calc, 3), " R²:", round(rsquared_calc, 3)), # MAE removed
+      x = "Observed GPP",
+      y = "Predicted GPP"
+    ) +
+    theme_minimal() +
+    coord_fixed(ratio = 1) # This ensures axes have the same scale for 1:1 comparison
+  
+  print(p) # Print the plot during the function call
+  
+  # We create a data frame of the results 
+  metrics_df <- data.frame(
+    Evaluation_Scenario = model_name, # This was 'Evaluation_against_test_set = test_set_descriptor'
+    R_squared = round(rsquared_calc, 3),
+    RMSE = round(rmse_calc, 3)
+  )
+  
+  return(metrics_df)
+}
+```
+
+```{r, warning=FALSE, message=FALSE}
+cat("Evaluating model trained on Dacos data\n")
+davos_on_davos_metrics <- eval_model(
+    model = model_davos_tuned, 
+    test_data = davos_test, 
+    model_name = "Davos-trained on Davos test" 
+)
+davos_on_laegeren_metrics <- eval_model(
+    model = model_davos_tuned, 
+    test_data = laegeren_test, 
+    model_name = "Davos-trained on Laegern test"
+)
+davos_on_combined_metrics <- eval_model(
+    model = model_davos_tuned, 
+    test_data = combined_test, 
+    model_name = "Davos-trained on combined test"
+)
+
+# Create Table 1
+table_model_davos_results <- dplyr::bind_rows(
+  davos_on_davos_metrics, 
+  davos_on_laegeren_metrics, 
+  davos_on_combined_metrics
+)
+knitr::kable(table_model_davos_results, 
+             caption = "Performance of KNN model trained on Davos data only.",
+             col.names = c("Evaluation scenario", "R²", "RMSE"))
+
+
+cat("Evaluating model trained on Laegern data\n")
+laegeren_on_laegeren_metrics <- eval_model(
+  model = model_laegeren_tuned, 
+  test_data = laegeren_test, 
+  model_name = "Laegern-trained on Laegern test" 
+)
+laegeren_on_davos_metrics <- eval_model(
+  model = model_laegeren_tuned, 
+  test_data = davos_test, 
+  model_name = "Laegern-trained on Davos test"
+)
+laegeren_on_combined_metrics <- eval_model(
+  model = model_laegeren_tuned, 
+  test_data = combined_test, 
+  model_name = "Laegern-trained on combined test"
+)
+
+# Create Table 2
+table_model_laegeren_results <- dplyr::bind_rows(
+  laegeren_on_laegeren_metrics, 
+  laegeren_on_davos_metrics, 
+  laegeren_on_combined_metrics
+)
+knitr::kable(table_model_laegeren_results, 
+             caption = "Performance of KNN model trained on Laegern data only.",
+             col.names = c("Evaluation scenario", "R²", "RMSE"))
+
+
+cat("Evaluating model trained on combined data\n")
+combined_on_davos_metrics <- eval_model(
+  model = model_combined_tuned, 
+  test_data = davos_test, 
+  model_name = "Combined-trained on Davos test"
+)
+combined_on_laegeren_metrics <- eval_model(
+  model = model_combined_tuned, 
+  test_data = laegeren_test, 
+  model_name = "Combined-trained on Laegern test"
+)
+combined_on_combined_metrics <- eval_model(
+  model = model_combined_tuned, 
+  test_data = combined_test, 
+  model_name = "Combined-trained on combined test"
+)
+
+# Create Table 3
+table_model_combined_results <- dplyr::bind_rows(
+  combined_on_davos_metrics, 
+  combined_on_laegeren_metrics, 
+  combined_on_combined_metrics
+)
+knitr::kable(table_model_combined_results, 
+             caption = "Performance of KNN model trained on combined (Davos & Laegern) data.",
+             col.names = c("Evaluation scenario", "R²", "RMSE"))
 ```

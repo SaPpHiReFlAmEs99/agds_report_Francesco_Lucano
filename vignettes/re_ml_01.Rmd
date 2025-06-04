@@ -118,7 +118,7 @@ print(lm_fit)
 
 ### 4.1. Liner regression model evaluation on test data
 ```{r, warning=FALSE, message=FALSE}
-# Function to calculate metrics and create plots
+# We define a function to calculate metrics and create plots
 eval_model <- function(model, test_data, model_name) {
 
   # We make predictions on the test data
@@ -135,7 +135,7 @@ eval_model <- function(model, test_data, model_name) {
   rsquared <- yardstick::rsq_vec(eval_data$Observed, eval_data$Predicted)
   mae <- yardstick::mae_vec(eval_data$Observed, eval_data$Predicted)
 
-  cat(paste0(model_name, " Performance on Test Set:\n"))
+  cat(paste0(model_name, " Performance on test set:\n"))
   cat(paste0("RMSE: ", round(rmse, 3), "\n"))
   cat(paste0("R-squared: ", round(rsquared, 3), "\n"))
   cat(paste0("MAE: ", round(mae, 3), "\n\n"))
@@ -143,7 +143,7 @@ eval_model <- function(model, test_data, model_name) {
   # Create scatter plot
   p <- ggplot(eval_data, aes(x = Observed, y = Predicted)) +
     geom_point(alpha = 0.5) +
-    geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red", size=1) + 
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red", linewidth=1) + 
     labs(
       title = paste(model_name, ": Observed vs. Predicted GPP (test set)"),
       subtitle = paste("RMSE:", round(rmse, 3), " R²:", round(rsquared, 3), "MAE: ", round(mae, 3)),
