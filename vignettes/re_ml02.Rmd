@@ -15,7 +15,7 @@ Here we provide information about the characteristics of the 2 study sites,  Lä
 
 **Location**
 
-* CH-Lae: Located in the Swiss Jura mountain range, representative of the montane zone.
+* CH-Lae: Located in the Swiss Jura mountain range, representative of mid-altitude mountain environment.
 * CH-Dav: Situated in the Eastern Swiss Alps, representative of the subalpine zone.
 
 ---
@@ -355,11 +355,11 @@ eval_model <- function(model, test_data, model_name) {
     theme_minimal() +
     coord_fixed(ratio = 1) # This ensures axes have the same scale for 1:1 comparison
   
-  print(p) # Print the plot during the function call
+  print(p) # To print the plot 
   
   # We create a data frame of the results 
   metrics_df <- data.frame(
-    Evaluation_Scenario = model_name, # This was 'Evaluation_against_test_set = test_set_descriptor'
+    Evaluation_Scenario = model_name, 
     R_squared = round(rsquared_calc, 3),
     RMSE = round(rmse_calc, 3)
   )
@@ -452,3 +452,120 @@ knitr::kable(table_model_combined_results,
              caption = "Performance of KNN model trained on combined (Davos & Laegern) data.",
              col.names = c("Evaluation scenario", "R²", "RMSE"))
 ```
+
+
+## 4. Discussion
+When evaluating the performance of models trained and tested on data from the same site, we can observe that the model trained on Davos data achieves a higher degree of accuracy for its own environment than the Laegern model does for its environment. The Davos model explains approximately 75% of the variance ($R^2$ = 0.745) on unseen Davos data , whereas the Laegern model explains about 62% of the variance ($R^2$ = 0.621) on its respective test set. This suggests that the GPP at the Davos site may be more consistently predicted by the chosen meteorological variables.
+
+However, when assessing the models' performance on the unseen site, the Davos-trained model performs significantly worse when transferred. When applied to the Laegern test set, its explanatory power drops considerably ($R^2$ from 0.745 to 0.536) and its prediction error increases substantially (RMSE from 1.411 to 2.818). Curiously, the model trained on Laegern data does not show a similar degradation when predicting for Davos. Its $R^2$ remains almost the same (0.621 vs 0.612), and its RMSE actually improves when predicting for Davos compared to its own test set (2.205 vs 2.473). This could be due to the much greater environmental and vegetative variety at the Laegern site, which may lead to a model that has learned more robust and general patterns.
+
+Finally, the results for the model trained on the combined dataset show an interesting behavior, as it outperforms both specialized models on their home test sets. For example, the combined model's prediction for Davos data ($R^2$ = 0.761)  is slightly more accurate than that of the specialized Davos model ($R^2$ = 0.745). Similarly, its prediction for Laegern data ($R^2$ = 0.646)  is also better than that of the specialized Laegern model ($R^2$ = 0.621). This suggests that training on a more diverse dataset from both sites created a more robust and generalized model. For context, the specialized models performed moderately on the combined test set, with the Davos-trained model achieving an $R^2$ of 0.585  and the Laegern-trained model an $R^2$ of 0.587.
+
+```{r, warning=FALSE, message=FALSE}
+# Time series visualization pf the models for the Davos test set
+# We create and reshape the data for the Davos test set 
+ts_davos_plot_data <- davos_test %>%
+  select(TIMESTAMP, GPP) %>%
+  mutate(
+    Predicted_by_Davos_Model = predict(model_davos_tuned, newdata = davos_test),
+    Predicted_by_Laegern_Model = predict(model_laegeren_tuned, newdata = davos_test),
+    Predicted_by_Combined_Model = predict(model_combined_tuned, newdata = davos_test)
+  ) %>%
+  rename(Observed_GPP = GPP) 
+
+ts_davos_plot_long <- ts_davos_plot_data %>%
+  pivot_longer(
+    cols = c(Observed_GPP, Predicted_by_Davos_Model, Predicted_by_Laegern_Model, Predicted_by_Combined_Model),
+    names_to = "Source",
+    values_to = "GPP_Value"
+  )
+
+# We filter from 2010 to 2014 for a clearer visualization 
+ts_davos_plot_subset <- ts_davos_plot_long %>%
+  filter(year(TIMESTAMP) >= 2010 & year(TIMESTAMP) < 2014)
+
+# Create the plot using the filtered data
+plot_davos_comparison_subset <- ggplot(ts_davos_plot_subset, aes(x = TIMESTAMP, y = GPP_Value, color = Source)) +
+  geom_line(linewidth = 0.8, alpha = 0.8) +
+  labs(
+    title = "Model predictions vs. observed GPP on the Davos test set",
+    subtitle = "Time series evaluation (2010-2014)",
+    x = "Date",
+    y = expression("GPP (gC m"^-2*" day"^-1*")"),
+    color = "Data source:"
+  ) +
+  theme_minimal()
+
+print(plot_davos_comparison_subset)
+
+
+# We do the same for the Laegern test set
+ts_laegeren_plot_data <- laegeren_test %>%
+  select(TIMESTAMP, GPP) %>%
+  mutate(
+    Predicted_by_Davos_Model = predict(model_davos_tuned, newdata = laegeren_test),
+    Predicted_by_Laegern_Model = predict(model_laegeren_tuned, newdata = laegeren_test),
+    Predicted_by_Combined_Model = predict(model_combined_tuned, newdata = laegeren_test)
+  ) %>%
+  rename(Observed_GPP = GPP)
+
+ts_laegeren_plot_long <- ts_laegeren_plot_data %>%
+  pivot_longer(
+    cols = c(Observed_GPP, Predicted_by_Davos_Model, Predicted_by_Laegern_Model, Predicted_by_Combined_Model),
+    names_to = "Source",
+    values_to = "GPP_Value"
+  )
+
+ts_laegeren_plot_subset <- ts_laegeren_plot_long %>%
+  filter(year(TIMESTAMP) >= 2010 & year(TIMESTAMP) < 2015)
+
+
+plot_laegeren_comparison_subset <- ggplot(ts_laegeren_plot_subset, aes(x = TIMESTAMP, y = GPP_Value, color = Source)) +
+  geom_line(linewidth = 0.8, alpha = 0.8) +
+  labs(
+    title = "Model predictions vs. observed GPP on the Laegeren test set",
+    subtitle = "Time series evaluation (2010-2014)",
+    x = "Date",
+    y = expression("GPP (gC m"^-2*" day"^-1*")"),
+    color = "Data source:"
+  ) +
+  theme_minimal()
+
+print(plot_laegeren_comparison_subset)
+
+
+# And for the combined test set
+ts_combined_plot_data <- combined_test %>%
+  select(TIMESTAMP, GPP, site_id) %>%
+  mutate(
+    Predicted_by_Davos_Model = predict(model_davos_tuned, newdata = combined_test),
+    Predicted_by_Laegern_Model = predict(model_laegeren_tuned, newdata = combined_test),
+    Predicted_by_Combined_Model = predict(model_combined_tuned, newdata = combined_test)
+  ) %>%
+  rename(Observed_GPP = GPP)
+
+ts_combined_plot_long <- ts_combined_plot_data %>%
+  pivot_longer(
+    cols = c(Observed_GPP, Predicted_by_Davos_Model, Predicted_by_Laegern_Model, Predicted_by_Combined_Model),
+    names_to = "Source",
+    values_to = "GPP_Value"
+  )
+
+ts_combined_plot_subset <- ts_combined_plot_long %>%
+  filter(year(TIMESTAMP) >= 2010 & year(TIMESTAMP) < 2015)
+
+plot_combined_comparison_subset <- ggplot(ts_combined_plot_subset, aes(x = TIMESTAMP, y = GPP_Value, color = Source)) +
+  geom_line(linewidth = 0.7, alpha = 0.8) +
+  facet_wrap(~ site_id, scales = "free_y", ncol = 1) + # Separate panels for CH-Dav and CH-Lae data
+  labs(
+    title = "Model predictions vs. observed GPP on the combined test set",
+    subtitle = "Time series evaluation (2010-2014), faceted by site",
+    x = "Date",
+    y = expression("GPP (gC m"^-2*" day"^-1*")"),
+    color = "Data source:"
+  ) +
+  theme_minimal()
+
+print(plot_combined_comparison_subset)
+```
+
