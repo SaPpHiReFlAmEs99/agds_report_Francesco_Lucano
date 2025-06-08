@@ -457,12 +457,14 @@ knitr::kable(table_model_combined_results,
 ## 4. Discussion
 When evaluating the performance of models trained and tested on data from the same site, we can observe that the model trained on Davos data achieves a higher degree of accuracy for its own environment than the Laegern model does for its environment. The Davos model explains approximately 75% of the variance ($R^2$ = 0.745) on unseen Davos data , whereas the Laegern model explains about 62% of the variance ($R^2$ = 0.621) on its respective test set. This suggests that the GPP at the Davos site may be more consistently predicted by the chosen meteorological variables.
 
-However, when assessing the models' performance on the unseen site, the Davos-trained model performs significantly worse when transferred. When applied to the Laegern test set, its explanatory power drops considerably ($R^2$ from 0.745 to 0.536) and its prediction error increases substantially (RMSE from 1.411 to 2.818). Curiously, the model trained on Laegern data does not show a similar degradation when predicting for Davos. Its $R^2$ remains almost the same (0.621 vs 0.612), and its RMSE actually improves when predicting for Davos compared to its own test set (2.205 vs 2.473). This could be due to the much greater environmental and vegetative variety at the Laegern site, which may lead to a model that has learned more robust and general patterns.
+However, when assessing the models performance on the unseen site, the Davos-trained model performs significantly worse when transferred. When applied to the Laegern test set, its explanatory power drops considerably ($R^2$ from 0.745 to 0.536) and its prediction error increases substantially (RMSE from 1.411 to 2.818). Curiously, the model trained on Laegern data does not show a similar degradation when predicting for Davos. Its $R^2$ remains almost the same (0.621 vs 0.612), and its RMSE actually improves when predicting for Davos compared to its own test set (2.205 vs 2.473). This could be due to the much greater environmental and vegetative variety at the Laegern site, which may lead to a model that has learned more robust and general patterns.
 
-Finally, the results for the model trained on the combined dataset show an interesting behavior, as it outperforms both specialized models on their home test sets. For example, the combined model's prediction for Davos data ($R^2$ = 0.761)  is slightly more accurate than that of the specialized Davos model ($R^2$ = 0.745). Similarly, its prediction for Laegern data ($R^2$ = 0.646)  is also better than that of the specialized Laegern model ($R^2$ = 0.621). This suggests that training on a more diverse dataset from both sites created a more robust and generalized model. For context, the specialized models performed moderately on the combined test set, with the Davos-trained model achieving an $R^2$ of 0.585  and the Laegern-trained model an $R^2$ of 0.587.
+Finally, the results for the model trained on the combined dataset show an interesting behavior, as it outperforms both specialized models on their home test sets. For example, the combined models prediction for Davos data ($R^2$ = 0.761)  is slightly more accurate than that of the specialized Davos model ($R^2$ = 0.745). Similarly, its prediction for Laegern data ($R^2$ = 0.646)  is also better than that of the specialized Laegern model ($R^2$ = 0.621). This suggests that training on a more diverse dataset from both sites created a more robust and generalized model. For context, the specialized models performed moderately on the combined test set, with the Davos-trained model achieving an $R^2$ of 0.585  and the Laegern-trained model an $R^2$ of 0.587.
 
+
+### 4.1. Time series analysis
 ```{r, warning=FALSE, message=FALSE}
-# Time series visualization pf the models for the Davos test set
+# Time series visualization of the models for the Davos test set
 # We create and reshape the data for the Davos test set 
 ts_davos_plot_data <- davos_test %>%
   select(TIMESTAMP, GPP) %>%
@@ -559,7 +561,7 @@ plot_combined_comparison_subset <- ggplot(ts_combined_plot_subset, aes(x = TIMES
   facet_wrap(~ site_id, scales = "free_y", ncol = 1) + # Separate panels for CH-Dav and CH-Lae data
   labs(
     title = "Model predictions vs. observed GPP on the combined test set",
-    subtitle = "Time series evaluation (2010-2014), faceted by site",
+    subtitle = "Time series evaluation (2010-2014), divided by site",
     x = "Date",
     y = expression("GPP (gC m"^-2*" day"^-1*")"),
     color = "Data source:"
@@ -568,4 +570,14 @@ plot_combined_comparison_subset <- ggplot(ts_combined_plot_subset, aes(x = TIMES
 
 print(plot_combined_comparison_subset)
 ```
+The time-series plots allow us to more closely analyze the cross-site model performance. Looking at the evaluation on the Laegern test set, we observe a systematic bias of the Davos-trained model. This model fails to capture the high summer GPP peaks, rarely exceeding a value of 8-10 gC m⁻² day⁻¹, while the observed GPP at Laegern often reaches over 15. This strong under-prediction bias is a result of the model training experience; because it has only learned from the colder, high-altitude Davos environment with its lower range of GPP, it is simply unable to predict the much higher productivity of the warmer, temperate Laegern site during its peak growing season, which is typical of a mixed deciduous-dominated forest with a seasonal leaf course.
 
+Conversely, the time-series plot for the Davos test set shows that the Laegern-trained model, while performing reasonably well, tends to slightly over-predict GPP during the summer peak. The Laegern model, having been trained on an ecosystem with a warmer climate and prominently composed of deciduous forest, anticipates a level of summer productivity that the more constrained subalpine site cannot always reach.
+
+The time-series plot of the combined test set confirms the very good adaptability of the model trained on both datasets. In the panel for the CH-Dav data, the combined model's predictions track the observed GPP almost perfectly, very similarly to the performance of the specialized Davos-only model. Even more interestingly, looking at the CH-Lae panel, the combined model successfully predicts the high summer GPP peaks, demonstrating that it has learned to produce higher GPP values when faced with Laegern-like conditions. This adaptive behavior, where the model is able to adjust its prediction range based on the input conditions of each site, shows that the combined model has not simply averaged the two sites behaviors, but has learned a more complex and generalizable function that integrates the distinct patterns from both ecosystems.
+
+
+### 4.2. Limitations of the combined model and true out-of-sample considerations
+When we train and test the combined model using data from both sites, it is an out-of-sample test for those specific data points, but not truly out-of-sample for the types of environments it has learned. The model is tuned to the characteristics of Jura montains and subalpine forests.
+
+If this model was tested against data from a completely different environment, such as a Mediterranean forest in Spain, we would expect its performance to be poor. A Spanish site would likely have a much warmer and drier climate and completely different vegetation types, representing predictor values and environmental conditions far outside the domain of the training data. This is an extrapolation problem, the prediction would exceed the range of the training data. This shows that even a good model is only reliable for the specific types of environments it has been trained on. You cannot guarantee it will perform well in a completely new place it has never seen before. To make a model that can accurately predict for new climate zones, you must include data from those zones in its training.
