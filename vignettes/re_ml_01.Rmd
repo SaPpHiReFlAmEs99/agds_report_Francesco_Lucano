@@ -1,7 +1,6 @@
 ---
 title: "Report 10.5"
 author: "Francesco Lucano"
-date: "5/05/2025"
 output:
   html_document:
     toc: true

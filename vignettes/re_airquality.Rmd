@@ -1,26 +1,22 @@
 ---
-title: "Report exercise 5.5"
+title: "Report 5.5"
 author: "Francesco Lucano"
-date: "`r Sys.Date()`"
-output:
-  html_document: default
-  word_document: default
-  pdf_document: default
+output: html_document
 ---
 
 
-# Introduction
+### Introduction
 The airquality dataset is a built-in R dataset containing daily atmospheric measurements taken in New York from May 1, 1973, to September 30, 1973. Data were collected by the New York State Department of Conservation for ozone measurements and by the National Weather Service for meteorological variables. The dataset includes:
 
-• Ozone: Mean ozone (in ppb) calculated from measurements taken between 1:00 PM and 3:00 PM at Roosevelt Island.
+    • Ozone: Mean ozone (in ppb) calculated from measurements taken between 1:00 PM and 3:00       PM at Roosevelt Island.
 
-• Solar.R: Solar radiation (in Langleys) measured from 8:00 AM to 12:00 PM.
+    • Solar.R: Solar radiation (in Langleys) measured from 8:00 AM to 12:00 PM.
 
-• Wind: Average wind speed (in mph) recorded at 7:00 AM and 10:00 AM.
+    • Wind: Average wind speed (in mph) recorded at 7:00 AM and 10:00 AM.
 
-• Temperature: Maximum daily temperature (°F).
+    • Temperature: Maximum daily temperature (°F).
 
-• Month and Day: Representing the date of the measurement.
+    • Month and Day: Representing the date of the measurement.
 
 
 ### Setup

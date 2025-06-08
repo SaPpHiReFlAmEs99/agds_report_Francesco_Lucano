@@ -1,7 +1,6 @@
 ---
-title: "Report exercise 9.6"
+title: "Report 9.6"
 author: "Francesco Lucano"
-date: "`r Sys.Date()`"
 output: html_document
 ---
 

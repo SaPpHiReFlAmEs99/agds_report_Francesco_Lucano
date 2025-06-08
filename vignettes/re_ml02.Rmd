@@ -1,7 +1,6 @@
 ---
 title: "Report 11.5"
 author: "Francesco Lucano"
-date: "03/06/2025" 
 output:
   html_document:
     toc: true
@@ -455,7 +454,7 @@ knitr::kable(table_model_combined_results,
 
 
 ## 4. Discussion
-When evaluating the performance of models trained and tested on data from the same site, we can observe that the model trained on Davos data achieves a higher degree of accuracy for its own environment than the Laegern model does for its environment. The Davos model explains approximately 75% of the variance ($R^2$ = 0.745) on unseen Davos data , whereas the Laegern model explains about 62% of the variance ($R^2$ = 0.621) on its respective test set. This suggests that the GPP at the Davos site may be more consistently predicted by the chosen meteorological variables.
+When evaluating the performance of models trained and tested on data from the same site, we can observe that the model trained on Davos data achieves a higher degree of accuracy for its own environment than the Laegern model does for its environment. The Davos model explains approximately 75% of the variance ($R^2$ = 0.745) on unseen Davos data , whereas the Laegern model explains about 62% of the variance ($R^2$ = 0.621) on its respective test set. This suggests that the GPP at the Davos site may be more consistently predicted by the chosen climatological variables.
 
 However, when assessing the models performance on the unseen site, the Davos-trained model performs significantly worse when transferred. When applied to the Laegern test set, its explanatory power drops considerably ($R^2$ from 0.745 to 0.536) and its prediction error increases substantially (RMSE from 1.411 to 2.818). Curiously, the model trained on Laegern data does not show a similar degradation when predicting for Davos. Its $R^2$ remains almost the same (0.621 vs 0.612), and its RMSE actually improves when predicting for Davos compared to its own test set (2.205 vs 2.473). This could be due to the much greater environmental and vegetative variety at the Laegern site, which may lead to a model that has learned more robust and general patterns.
 
